@@ -2,10 +2,10 @@ from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 import time
 import numpy as np
+from lmdbcache import LMDBCacheContextManager
 
 delays = [5, 4, 6, 2, 1, 3]
 
-visited=[]
 
 headers = {
     'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36',
@@ -22,21 +22,33 @@ def url_open(url):
     soup = BeautifulSoup(web_page, 'html.parser')
     return soup
 
+from lmdbcache import LMDBCacheContextManager
+lmdbpath = "pibcache"
 
-for i in range(1479570,1590000):
-	if i not in visited:
-		delay = np.random.choice(delays)
-		time.sleep(delay)
-		soup = url_open('https://pib.gov.in/PressReleasePage.aspx?PRID={}'.format(i))
-		visited.append(i)
-		content = soup.find('div', {'id': 'PdfDiv'})
-		text = content.text.strip()
-		if(text != "Posted On:"):
-			out=open('{}.txt'.format(i),'w')
-			out.write(text)
-			out.close()
-		else:
-			print('empty release found with id:{} found'.format(i))
+with LMDBCacheContextManager(lmdbpath+"error") as errorcache:
+	with LMDBCacheContextManager(lmdbpath+"empty") as emptycache:
+		with LMDBCacheContextManager(lmdbpath) as cache:
+			for i in range(1479816,1590000):
+				if (not cache.db.findkey(str(i))) and (not emptycache.db.findkey(str(i))):
+					delay = np.random.choice(delays)
+					time.sleep(delay)
+					try:
+						soup = url_open('https://pib.gov.in/PressReleasePage.aspx?PRID={}'.format(i))
+					except Exception as e:
+						print(i,e)
+						errorcache(str(i), "Error")
+						continue
+					content = soup.find('div', {'id': 'PdfDiv'})
+					text = content.text.strip()
+					if(text != "Posted On:"):
+						print('release found with id:{}'.format(i))
+						cached_text = cache(str(i), text)
+						out=open('out/{}.txt'.format(i),'w')
+						out.write(text)
+						out.close()
+					else:
+						emptycache(str(i), "Nothing")
+						print('empty release found with id:{}'.format(i))
 
 
 '''
