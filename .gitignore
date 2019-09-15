@@ -6,3 +6,4 @@ pibcacheempty/
 pibcacheerror/
 __pycache__/
 pool.py
+*.txt
