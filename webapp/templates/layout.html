@@ -1,8 +1,23 @@
 <html>
-<head>
-</head>
-<body>
-{% block body %}
-{% endblock %}
-</body>
+    <head>
+        <title> {% block title %} {% endblock %}</title>
+        <script src="https://d3js.org/d3.v4.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"/>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+        {% include 'navbar.html' %}
+        <div class="container">
+            {% include 'flash.html' %}
+            <div class="row">
+                <div class="col">
+                    {% block body %}
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+    </body>
 </html>
