@@ -10,3 +10,5 @@ pool.py
 webapp/*.db
 webapp/*.db-journal
 *.pyc
+*.db
+migrations/
