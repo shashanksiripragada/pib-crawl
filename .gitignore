@@ -9,3 +9,4 @@ pool.py
 *.txt
 webapp/*.db
 webapp/*.db-journal
+*.pyc

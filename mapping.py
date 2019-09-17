@@ -1,18 +1,12 @@
 import mysql.connector as mysql
-from urllib.request import Request, urlopen
-from bs4 import BeautifulSoup
 import time
 import numpy as np
 import langid
 from lmdbcache import LMDBCacheContextManager
 lmdbpath = "inserted"
 
-langid.set_languages(['en','hi','ur','mr','te','ta','pa','bn','kn','or','gu','as','ml'])
-
-
-
 from webapp import db
-from webapp.models import Entry
+from webapp.models import Mapping
 
 def rewrite(entry):
 	_id, text, *rest = entry

@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block body %}
+
+
+{% block content %}
+	{% for entry in entries %}
+		{{entry.id}} <br/>
+		{{entry.date}} <br/>
+		<textarea>
+			{{entry.content}} 
+		</textarea>
+		<br/>
+	{% endfor %}
+{% endblock %}
+
+
+{% endblock %}

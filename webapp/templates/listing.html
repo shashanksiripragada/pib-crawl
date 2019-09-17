@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+
+{% block body %}
+
+{% for entry in entries %}
+	<a href="{{url_for('entry', id=entry.id)}}">{{entry.id}}</a> <br/>	
+	<hr/>
+{% endfor %}
+
+{% endblock %}
