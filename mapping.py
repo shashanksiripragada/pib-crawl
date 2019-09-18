@@ -7,8 +7,15 @@ lmdbpath = "inserted"
 import datetime
 #from datetime import datetime
 from webapp import db
-from webapp.models import Entry
+from webapp.models import Entry, Link
+from sqlalchemy import func
+import itertools
+from tqdm import tqdm
 
+def all_pairs(lst):
+    for p in itertools.permutations(lst):
+        i = iter(p)
+        return zip(i,i)
 '''
 def rewrite(entry):
 	_id, text, *rest = entry
@@ -60,7 +67,7 @@ def get_mapping():
 				if abs(diff.days) <=10  and year==q_year and year==2019:
 					print(row.id,exists.id)
 
-get_mapping()
+#get_mapping()
 
 def ifexists():
 	row1=Entry.query.filter_by(id=1520841).first()
@@ -71,3 +78,33 @@ def ifexists():
 		print(row.content)
 
 #ifexists()
+
+
+def findpairs():
+	dups = db.session.query(Entry.date,func.count(Entry.id).label('freq')).\
+						group_by(Entry.date).\
+						subquery()
+	pair = db.session.query(Entry.id,Entry.lang,Entry.date,dups.c.freq).\
+						outerjoin(dups,Entry.date==dups.c.date).\
+						filter(dups.c.freq>1).\
+						order_by(Entry.date).\
+						all()
+	mapping = {}
+	for p in pair:
+		if p.date not in mapping:
+			mapping[p.date] = [p.id]
+		else:
+			mapping[p.date].append(p.id)
+	
+	l = list(mapping.values())
+	for bunch in tqdm(l):
+		z=itertools.permutations(bunch,2)
+		z = list(z)
+		for (x,y) in z:
+			link = Link(first_id=x,second_id=y)
+			db.session.add(link)
+			link = Link(first_id=y,second_id=x)
+			db.session.add(link)
+			db.session.commit()
+
+findpairs()

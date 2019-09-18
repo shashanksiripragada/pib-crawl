@@ -12,8 +12,10 @@ db = SQLAlchemy(app)
 
 
 from . import models as M
+is_sqlite = True
 
-migrate = Migrate(app, db)
+
+migrate = Migrate(app, db, render_as_batch=is_sqlite)
 
 
 @app.route('/')
