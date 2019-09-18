@@ -24,7 +24,9 @@ migrate = Migrate(app, db, render_as_batch=is_sqlite)
 @app.route('/entry/<id>')
 def entry(id):
 	x =  M.Entry.query.get(id)
+	
 	return render_template('entry.html', entry=x)
+
 
 
 @app.route('/entry')

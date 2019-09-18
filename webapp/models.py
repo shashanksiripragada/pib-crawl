@@ -25,6 +25,7 @@ class Link(db.Model):
     first_id = db.Column(db.Integer, db.ForeignKey('entry.id'))
     second_id = db.Column(db.Integer, db.ForeignKey('entry.id'))
     first = db.relationship('Entry',foreign_keys=[first_id])
+    second = db.relationship('Entry',foreign_keys=[second_id])
 
 db.create_all()
 

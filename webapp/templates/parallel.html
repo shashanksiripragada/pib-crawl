@@ -3,15 +3,22 @@
 
 
 {% block content %}
+	<div class="row">
 	{% for entry in entries %}
+		<div class="col-6">
 		{{entry.id}} <br/>
 		{{entry.date}} <br/>
-		<textarea>
+		<code>
+		<pre>
 			{{entry.content}} 
-		</textarea>
+		</pre>
+		</code>
+	</div>
 		<br/>
 	{% endfor %}
+	</div>
 {% endblock %}
 
 
 {% endblock %}
+
