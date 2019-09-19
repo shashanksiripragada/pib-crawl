@@ -5,11 +5,9 @@ import time
 import numpy as np
 import langid
 from lmdbcache import LMDBCacheContextManager
-lmdbpath = "inserted"
+from tqdm import tqdm
 
-langid.set_languages(['en','hi','ur','mr','te','ta','pa','bn','kn','or','gu','as','ml'])
-
-
+#lmdbpath = "inserted"
 
 from webapp import db
 from webapp.models import Entry
@@ -59,8 +57,7 @@ query = 'SELECT * FROM data'
 cursor.execute(query)
 
 with open('failed.txt','w+') as fp:
-	for x in cursor:
-
+	for x in tqdm(cursor):
 		try:
 			rewrite(x)
 		except:

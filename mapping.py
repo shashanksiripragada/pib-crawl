@@ -16,41 +16,12 @@ def all_pairs(lst):
     for p in itertools.permutations(lst):
         i = iter(p)
         return zip(i,i)
-'''
-def rewrite(entry):
-	_id, text, *rest = entry
-	date, day, month, year, time, *rest = rest
-	place, lang, clean = rest
-	exists = Entry.query.filter_by(id=_id).first()
 
-	if exists:
-		return
-
-	from datetime import datetime
-
-	dstr = f'{month} {day} {year} {time}'
-	#print(dstr)
-	date = datetime.strptime(dstr, '%b %d %Y %I:%M%p')
-
-
-	#date = process(day, month, year, time)
-	# create objects
-
-	e = Entry(
-		id = _id,
-		content = clean,
-		date = date,
-		city = place,
-		lang = lang
-	)
-
-	db.session.add(e)
-	db.session.commit()
-'''
 del_id=50
 del_time=1
 datetimeFormat = '%Y-%m-%d %H:%M:%S'
 
+'''
 def get_mapping():
 	rows = Entry.query.order_by(Entry.date.desc()).filter_by(lang='en').all()
 	for row in rows:
@@ -68,6 +39,7 @@ def get_mapping():
 					print(row.id,exists.id)
 
 #get_mapping()
+'''
 
 def ifexists():
 	row1=Entry.query.filter_by(id=1520841).first()
@@ -79,7 +51,7 @@ def ifexists():
 
 #ifexists()
 
-
+#### Pairs based on same posted date  
 def findpairs():
 	dups = db.session.query(Entry.date,func.count(Entry.id).label('freq')).\
 						group_by(Entry.date).\
@@ -102,8 +74,6 @@ def findpairs():
 		z = list(z)
 		for (x,y) in z:
 			link = Link(first_id=x,second_id=y)
-			db.session.add(link)
-			link = Link(first_id=y,second_id=x)
 			db.session.add(link)
 			db.session.commit()
 
