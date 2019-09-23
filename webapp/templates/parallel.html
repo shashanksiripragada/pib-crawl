@@ -17,6 +17,8 @@
 		<br/>
 	{% endfor %}
 	</div>
+	<a class="btn btn-primary" href="{{url_for('parallel_align', src=entries[0].id, tgt=entries[1].id)}}">Align</a>
+
 {% endblock %}
 
 

@@ -3,19 +3,18 @@ import time
 import numpy as np
 import langid
 from lmdbcache import LMDBCacheContextManager
-lmdbpath = "inserted"
+from ilmulti.segment import SimpleSegmenter, Segmenter
+from ilmulti.sentencepiece import SentencePieceTokenizer
 import datetime
-#from datetime import datetime
 from webapp import db
 from webapp.models import Entry, Link
 from sqlalchemy import func
 import itertools
 from tqdm import tqdm
-
-def all_pairs(lst):
-    for p in itertools.permutations(lst):
-        i = iter(p)
-        return zip(i,i)
+import nltk
+from ilmulti.translator.pretrained import mm_all
+from bleualign.align import Aligner
+import os
 
 del_id=50
 del_time=1
@@ -39,17 +38,80 @@ def get_mapping():
 					print(row.id,exists.id)
 
 #get_mapping()
+
+
+		sent_text = nltk.sent_tokenize(row1.content)
+		print(len(sent_text))
+		for sent in sent_text:
+			print(sent,'\n')
+
+
 '''
+output = open('output.txt','w+')
+outsrc = open('outsrc.txt','w+')
+outtgt = open('outtgt.txt','w+')
+srcfile = open('srcfile.txt','r')
+tgtfile = open('tgtfile.txt','r')
+hyp_src_tgt_file = open('hyp_src_tgt_file.txt','r')
+
+def align(srcfile,tgtfile,hyp_src_tgt_file):
+	options = {
+	'srcfile': srcfile,
+	'targetfile': tgtfile,
+	'srctotarget': [hyp_src_tgt_file],
+	'targettosrc': [],
+	'output': output,
+	'output-src': outsrc, 'output-target': outtgt,
+	}
+	a = Aligner(options)
+	a.mainloop()
+	output_src, output_target = a.results()
+	print(output_src,output_target)
+
+
+
+align(srcfile,tgtfile,hyp_src_tgt_file)
+
+segmenter = Segmenter()
+translator = mm_all()
+tokenizer = SentencePieceTokenizer()
+
+def get_tokenized(content):
+	untok = []
+	for line in content:
+	lines = line.splitlines()
+	for l in lines:
+		untok.append(l) #untokenized 
+		lang, _out = tokenizer(l)
+		tok = ' '.join(_out) #tokenized
+	return untok, tok
+
 
 def ifexists():
-	row1=Entry.query.filter_by(id=1520841).first()
+	src = []
+	tgt = []
+	hyp_src_tgt = []
+	row1=Entry.query.filter_by(id=1580832).first()
 	if row1:
-		print(row1.content)
-	row=Entry.query.filter_by(id=1520946).first()
+		content = segmenter(row1.content)[1]
+		untok, tok = get_tokenized(content)
+		#print(tok,file=tgtfile)
+	row=Entry.query.filter_by(id=1580904).first()
 	if row:
-		print(row.content)
-
+		content = segmenter(row.content)[1]
+		untok, tok = get_tokenized(content)
+		#print(tok,file=srcfile)
+		for sent in untok:
+			output = translator(sent,tgt_lang='en')[0]['tgt']
+			hyp_src_tgt.append(output)
+			lang, _out = tokenizer(output)
+			tok = ' '.join(_out)
+			print(tok,file=hyp_src_tgt_file)	
+				
 #ifexists()
+
+
+
 
 #### Pairs based on same posted date  
 def findpairs():
@@ -77,4 +139,5 @@ def findpairs():
 			db.session.add(link)
 			db.session.commit()
 
-findpairs()
+#findpairs()
+

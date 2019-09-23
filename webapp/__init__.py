@@ -49,6 +49,16 @@ def parallel():
 	return render_template('parallel.html', entries=[src_entry,tgt_entry])
 
 
+@app.route('/parallel/align')
+def parallel_align():
+	src = request.args.get('src')
+	tgt = request.args.get('tgt')
+	src_entry =  M.Entry.query.get(src)
+	tgt_entry =  M.Entry.query.get(tgt)
+	return render_template('parallel.html', entries=[src_entry,tgt_entry])
+
+
+
 @app.route('/entry2/<id>')
 def entry2(id):
 	x =  M.Entry.query.get(id)
