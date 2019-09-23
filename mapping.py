@@ -1,8 +1,6 @@
-import mysql.connector as mysql
 import time
 import numpy as np
 import langid
-from lmdbcache import LMDBCacheContextManager
 from ilmulti.segment import SimpleSegmenter, Segmenter
 from ilmulti.sentencepiece import SentencePieceTokenizer
 import datetime
@@ -47,12 +45,15 @@ def get_mapping():
 
 
 '''
+
+'''
 output = open('output.txt','w+')
 outsrc = open('outsrc.txt','w+')
 outtgt = open('outtgt.txt','w+')
 srcfile = open('srcfile.txt','r')
 tgtfile = open('tgtfile.txt','r')
 hyp_src_tgt_file = open('hyp_src_tgt_file.txt','r')
+'''
 
 def align(srcfile,tgtfile,hyp_src_tgt_file):
 	options = {
@@ -60,17 +61,14 @@ def align(srcfile,tgtfile,hyp_src_tgt_file):
 	'targetfile': tgtfile,
 	'srctotarget': [hyp_src_tgt_file],
 	'targettosrc': [],
-	'output': output,
+	#'output': output,
 	'output-src': outsrc, 'output-target': outtgt,
 	}
 	a = Aligner(options)
 	a.mainloop()
 	output_src, output_target = a.results()
-	print(output_src,output_target)
+	return output_src, output_target
 
-
-
-align(srcfile,tgtfile,hyp_src_tgt_file)
 
 segmenter = Segmenter()
 translator = mm_all()
@@ -78,37 +76,37 @@ tokenizer = SentencePieceTokenizer()
 
 def get_tokenized(content):
 	untok = []
+	tok = []
 	for line in content:
-	lines = line.splitlines()
-	for l in lines:
-		untok.append(l) #untokenized 
-		lang, _out = tokenizer(l)
-		tok = ' '.join(_out) #tokenized
+		lines = line.splitlines()
+		for l in lines:
+			untok.append(l) #untokenized 
+			lang, _out = tokenizer(l)
+			tokens = ' '.join(_out) #tokenized
+			tok.append(tokens)
 	return untok, tok
 
 
 def ifexists():
-	src = []
-	tgt = []
 	hyp_src_tgt = []
 	row1=Entry.query.filter_by(id=1580832).first()
 	if row1:
 		content = segmenter(row1.content)[1]
 		untok, tok = get_tokenized(content)
-		#print(tok,file=tgtfile)
+		tgt = tok
 	row=Entry.query.filter_by(id=1580904).first()
 	if row:
 		content = segmenter(row.content)[1]
 		untok, tok = get_tokenized(content)
-		#print(tok,file=srcfile)
+		src = tok
 		for sent in untok:
 			output = translator(sent,tgt_lang='en')[0]['tgt']
 			hyp_src_tgt.append(output)
 			lang, _out = tokenizer(output)
-			tok = ' '.join(_out)
-			print(tok,file=hyp_src_tgt_file)	
-				
-#ifexists()
+			tokens = ' '.join(_out)
+			hyp_src_tgt = tokens
+	align(src,tgt,hyp_src_tgt)		
+ifexists()
 
 
 

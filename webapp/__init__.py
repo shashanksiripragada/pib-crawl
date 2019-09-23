@@ -17,6 +17,15 @@ is_sqlite = True
 
 migrate = Migrate(app, db, render_as_batch=is_sqlite)
 
+from ilmulti.segment import SimpleSegmenter, Segmenter
+from ilmulti.sentencepiece import SentencePieceTokenizer
+from ilmulti.translator.pretrained import mm_all
+from ilmulti.align import BLEUAligner
+
+segmenter = Segmenter()
+translator = mm_all().get_translator()
+tokenizer = SentencePieceTokenizer()
+aligner = BLEUAligner(translator, tokenizer, segmenter)
 
 @app.route('/')
 
@@ -55,7 +64,9 @@ def parallel_align():
 	tgt = request.args.get('tgt')
 	src_entry =  M.Entry.query.get(src)
 	tgt_entry =  M.Entry.query.get(tgt)
-	return render_template('parallel.html', entries=[src_entry,tgt_entry])
+	src_out, tgt_out = aligner(src_entry.content, src_entry.lang, 
+		tgt_entry.content, tgt_entry.lang)
+	return render_template('parallel.html', entries=[src_out,tgt_out])
 
 
 
