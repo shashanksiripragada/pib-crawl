@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% block body %}
+
+
+{% block content %}
+    <div class="row">
+    {% for entry in entries %}
+        <div class="col-6">
+        {{entry.id}} <br/>
+        {{entry.date}} <br/>
+
+        </div>
+    {% endfor %}
+    </div>
+    <div class="row">
+    {% for text in content %}
+        <div class="col-6">
+        <code>
+            <pre>
+                {{text}} 
+            </pre>
+        </code>
+        </div>
+    {% endfor %}
+    </div>
+
+
+{% endblock %}
+
+
+{% endblock %}
+

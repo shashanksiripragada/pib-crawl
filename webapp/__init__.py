@@ -66,7 +66,9 @@ def parallel_align():
 	tgt_entry =  M.Entry.query.get(tgt)
 	src_out, tgt_out = aligner(src_entry.content, src_entry.lang, 
 		tgt_entry.content, tgt_entry.lang)
-	return render_template('parallel.html', entries=[src_out,tgt_out])
+	print(src_out)
+	print(tgt_out)
+	return render_template('aligned.html', entries=[src_entry,tgt_entry],content=[src_out,tgt_out])
 
 
 
