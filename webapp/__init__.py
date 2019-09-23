@@ -23,7 +23,8 @@ from ilmulti.translator.pretrained import mm_all
 from ilmulti.align import BLEUAligner
 
 segmenter = Segmenter()
-translator = mm_all().get_translator()
+root = '/home/darth.vader/.ilmulti/mm-all'
+translator = mm_all(root=root).get_translator()
 tokenizer = SentencePieceTokenizer()
 aligner = BLEUAligner(translator, tokenizer, segmenter)
 
