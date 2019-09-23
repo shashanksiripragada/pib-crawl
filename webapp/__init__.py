@@ -40,11 +40,13 @@ def entry(id):
 
 @app.route('/entry')
 def listing():
+	ids = [1584627,1584633,1584642,1584667,1584669,1584702]
 	x =  M.Entry.query
+	x = x.filter(Entry.id.in_(ids)).all()
 	# x = x.filter_by(id=id)
-	x = x.order_by(M.Entry.date)
-	x = x.limit(5)
-	x = x.all()
+	#x = x.order_by(M.Entry.date)
+	#x = x.limit(5)
+	#x = x.all()
 	print(x)
 	return render_template('listing.html', entries=x)
 
@@ -66,9 +68,20 @@ def parallel_align():
 	tgt_entry =  M.Entry.query.get(tgt)
 	src_out, tgt_out = aligner(src_entry.content, src_entry.lang, 
 		tgt_entry.content, tgt_entry.lang)
-	print(src_out)
-	print(tgt_out)
-	return render_template('aligned.html', entries=[src_entry,tgt_entry],content=[src_out,tgt_out])
+	def detok(src_out):
+		src = []
+		for line in src_out:
+			src_detok = tokenizer.detokenize(line)
+			src.append(src_detok)
+		return src
+
+	src = detok(src_out)
+	tgt = detok(tgt_out)
+	
+	src_entry.content = '\n'.join(src)
+	tgt_entry.content = '\n'.join(tgt)
+	return render_template('parallel.html', entries=[src_entry,tgt_entry])
+	#return render_template('aligned.html', entries=[src_entry,tgt_entry],content=[src,tgt])
 
 
 
