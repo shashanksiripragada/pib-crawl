@@ -39,7 +39,6 @@ def listing():
     print(x)
     return render_template('listing.html', entries=x)
 
-
 @docstore.route('/parallel')
 def parallel():
     src = request.args.get('src')
