@@ -18,7 +18,7 @@
 <div class="col-4">
 	<ul>
 {% for link in entry.neighbors %}
-<li><a href="{{url_for('parallel', src=link.first_id, tgt=link.second_id)}}">[compare]</a>{{link.second_id}} {{link.second.lang}} </li>
+<li><a href="{{url_for('docstore.parallel', src=link.first_id, tgt=link.second_id)}}">[compare]</a>{{link.second_id}} {{link.second.lang}} </li>
 {% endfor %}
 </ul>
 </div>

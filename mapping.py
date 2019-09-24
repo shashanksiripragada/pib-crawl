@@ -106,7 +106,7 @@ def ifexists():
 			tokens = ' '.join(_out)
 			hyp_src_tgt = tokens
 	align(src,tgt,hyp_src_tgt)		
-ifexists()
+#ifexists()
 
 
 
