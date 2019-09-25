@@ -119,30 +119,34 @@ def preprocess(corpus):
         alpha = [a for a in alpha if a]
         for a in alpha:
             processed.append(a)
-
     return ' '.join(processed)
 
-with open('posmatches.csv', 'r') as f:
-    data = csv.reader(f)
+def get_candidate_vecs(query_id, candidates):
     corpus = []
+    query_content = Translation.query.filter(Translation.parent_id == query_id).first()
+    query = preprocess(query_content.translated)        
+    content = Entry.query.filter(Entry.id.in_(candidates)).all()
+    for _content in content:
+        processed = preprocess(_content.content)
+        corpus.append(processed)
+    
+    vectorizer = TfidfVectorizer()
+    X = vectorizer.fit_transform(corpus)
+    q = vectorizer.transform([query])
+    return q, X
+
+
+with open('posmatches.csv', 'r') as f:
+    data = csv.reader(f)    
     for row in data:
         query_id = row[0]
         posmatches = row[1]
         posmatches = posmatches[1:-1].split(',')
         posmatches = [pos.strip(' ') for pos in posmatches]
-        posmatches = [int(i) for i in posmatches]
-        query_content = Translation.query.filter(Translation.parent_id == query_id).first()
-        query = preprocess(query_content.translated)        
-        content = Entry.query.filter(Entry.id.in_(posmatches)).all()
-        for _content in content:
-            processed = preprocess(_content.content)
-            corpus.append(processed)
+        candidates = [int(i) for i in posmatches]
+        q, X = get_candidate_vecs(query_id,candidates)
         
-        vectorizer = TfidfVectorizer()
-        X = vectorizer.fit_transform(corpus)
-        q = vectorizer.transform([query])
-        print(q)
-        
+
 
 
         
