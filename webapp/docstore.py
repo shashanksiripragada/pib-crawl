@@ -30,24 +30,15 @@ def entry(id):
     retrieved = retrieve_neighbours(x.id)
     return render_template('entry.html', entry=x, retrieved=retrieved)
 
-@docstore.route('/entry')
+@docstore.route('/entry', methods=['GET'])
 def listing():
-    # ids = [1584627,1584633,1584642,1584667,1584669,1584702]
-    # x =  M.Entry.query
-    # x = x.filter(M.Entry.id.in_(ids)).all()
-    # x = x.filter_by(id=id)
-    #x = x.order_by(M.Entry.date)
-    #x = x.limit(5)
-    #x = x.all()
-    # print(x)
+    lang = request.args.get('lang', 'hi')
     x = (db.session.query(M.Entry)
             .filter(M.Entry.id == M.Translation.parent_id)
-            .filter(M.Entry.lang == 'hi')
-            .limit(200)
+            .filter(M.Entry.lang == lang)
             .all()
+            # .limit(200)
         )
-    print(x)
-
     return render_template('listing.html', entries=x)
 
 @docstore.route('/parallel')

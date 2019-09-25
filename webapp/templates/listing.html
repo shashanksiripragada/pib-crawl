@@ -2,16 +2,8 @@
 
 {% block body %}
 
-<div class="card-columns">
 {% for entry in entries %}
-  <div class="card">
-    <!-- <img src="..." class="card-img-top" alt="..."> -->
-    <div class="card-body">
-      <h5 class="card-title"></h5>
-      <p class="card-text"><a href="{{url_for('docstore.entry', id=entry.id)}}">{{entry.id}}</a></p>
-    </div>
-  </div>
+<span style="margin:0.5em"><a href="{{url_for('docstore.entry', id=entry.id)}}">{{entry.id}}</a></span>
 {% endfor %}
-</div>
 
 {% endblock %}
