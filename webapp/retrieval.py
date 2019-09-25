@@ -26,6 +26,7 @@ from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.stem import PorterStemmer
 
 def preprocess(corpus):
+    # takes in document content and returns processed document as string
     stop_words = set(stopwords.words('english'))
     ps = PorterStemmer()
     processed = []
@@ -56,33 +57,18 @@ def tfidf(query, candidates):
 def reorder(candidates, indices, similarities):
     Retrieved = namedtuple('Retrieved', 'id similarity')
     return [
-        Retrieved(id=candidates[i].id, similarity=similarities[i]) \
+        Retrieved(id=candidates[i], similarity=similarities[i]) \
         for i in indices
     ]
 
 def get_candidates(query_id):
     delta = timedelta(days = 2)
-    # entries = db.session.query(Translation.parent_id, Entry.date)\
-    #                     .filter(Translation.parent_id == Entry.id)\
-    #                     .order_by(Entry.date.desc())\
-    #                     .first()
-    #                     #.subquery()
-
     entry = (db.session.query
                     (Translation.parent_id, Entry.date)
                     .filter(Translation.parent_id == Entry.id)
                     .filter(Entry.id == query_id)
                     .first()
             )
-
-    # for entry in tqdm(entries):
-    #     posmatches[entry.parent_id] = []
-    #     matches = db.session.query(Entry.id)\
-    #                 .filter(Entry.lang=='en')\
-    #                 .filter(Entry.date.between(entry.date-delta,entry.date+delta))\
-    #                 .all()
-    #     for match in matches:
-    #         posmatches[entry.parent_id].append(match.id)   
 
     candidates = []
     matches = db.session.query(Entry.id) \
@@ -95,16 +81,16 @@ def get_candidates(query_id):
 
 def retrieve_neighbours(query_id):
     candidates = get_candidates(query_id)
-    corpus = []
-    query_content = Translation.query.filter(Translation.parent_id == query_id).first()
-    query = preprocess(query_content.translated)        
-    content = Entry.query.filter(Entry.id.in_(candidates)).all()
-    for _content in content:
-        processed = preprocess(_content.content)
-        corpus.append(processed)
+    candidate_corpus = []
+    query = Translation.query.filter(Translation.parent_id == query_id).first()
+    query_content = preprocess(query.translated)        
+    candidate_content = Entry.query.filter(Entry.id.in_(candidates)).all()
+    for content in candidate_content:
+        processed = preprocess(content.content)
+        candidate_corpus.append(processed)
 
-    indices, similarities = tfidf(query, corpus)
-    export = reorder(content, indices, similarities)
+    indices, similarities = tfidf(query_content, candidate_corpus)
+    export = reorder(candidates, indices, similarities)
 
     truncate_length = min(5, len(export))
     export = export[:truncate_length]

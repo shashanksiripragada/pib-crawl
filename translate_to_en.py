@@ -71,46 +71,14 @@ def translate():
 
 #translate()
 '''
-#posmatches = {}
-def retrieve():
-    delta = timedelta(days = 2)
-    entries = db.session.query(Translation.parent_id, Entry.date)\
-                        .filter(Translation.parent_id == Entry.id)\
-                        .order_by(Entry.date.desc())\
-                        .first()
-                        #.subquery()
 
-    for entry in tqdm(entries):
-        posmatches[entry.parent_id] = []
-        matches = db.session.query(Entry.id)\
-                    .filter(Entry.lang=='en')\
-                    .filter(Entry.date.between(entry.date-delta,entry.date+delta))\
-                    .all()
-        for match in matches:
-            posmatches[entry.parent_id].append(match.id)   
-
-
+from webapp.retrieval import get_candidates,retrieve_neighbours
     
-#retrieve()
-'''
-with open('posmatches.csv', 'w') as csv_file:
-    writer = csv.writer(csv_file)
-    for key, value in posmatches.items():
-       writer.writerow([key, value])
-
-'''
-
-from webapp.retrieval import retrieve_neighbours
-    
-
 
 with open('posmatches.csv', 'r') as f:
     data = csv.reader(f)    
     for row in data:
         query_id = row[0]
-        posmatches = row[1]
-        posmatches = posmatches[1:-1].split(',')
-        posmatches = [pos.strip(' ') for pos in posmatches]
-        candidates = [int(i) for i in posmatches]
-        e = retrieve_neighbours(query_id, candidates)
-        print(e)
+        e = get_candidates(query_id)
+        n = retrieve_neighbours(query_id)
+        print(n)

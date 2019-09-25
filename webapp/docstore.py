@@ -5,7 +5,6 @@ from flask_migrate import Migrate
 from datetime import datetime, timedelta 
 from sqlalchemy import and_
 from collections import Counter
-
 from . import models as M
 from . import db
 from ilmulti.segment import SimpleSegmenter, Segmenter
