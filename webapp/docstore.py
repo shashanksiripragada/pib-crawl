@@ -7,6 +7,7 @@ from sqlalchemy import and_
 from collections import Counter
 
 from . import models as M
+from . import db
 from ilmulti.segment import SimpleSegmenter, Segmenter
 from ilmulti.sentencepiece import SentencePieceTokenizer
 from ilmulti.translator.pretrained import mm_all
@@ -31,14 +32,22 @@ def entry(id):
 
 @docstore.route('/entry')
 def listing():
-    ids = [1584627,1584633,1584642,1584667,1584669,1584702]
-    x =  M.Entry.query
-    x = x.filter(M.Entry.id.in_(ids)).all()
+    # ids = [1584627,1584633,1584642,1584667,1584669,1584702]
+    # x =  M.Entry.query
+    # x = x.filter(M.Entry.id.in_(ids)).all()
     # x = x.filter_by(id=id)
     #x = x.order_by(M.Entry.date)
     #x = x.limit(5)
     #x = x.all()
+    # print(x)
+    x = (db.session.query(M.Entry)
+            .filter(M.Entry.id == M.Translation.parent_id)
+            .filter(M.Entry.lang == 'hi')
+            .limit(200)
+            .all()
+        )
     print(x)
+
     return render_template('listing.html', entries=x)
 
 @docstore.route('/parallel')

@@ -68,10 +68,12 @@ def get_candidates(query_id):
     #                     .first()
     #                     #.subquery()
 
-    entry = db.session.query(Translation.parent_id, Entry.date)\
-                        .filter(Translation.parent_id == Entry.id)\
-                        .order_by(Entry.date.desc())\
-                        .first()
+    entry = (db.session.query
+                    (Translation.parent_id, Entry.date)
+                    .filter(Translation.parent_id == Entry.id)
+                    .filter(Entry.id == query_id)
+                    .first()
+            )
 
     # for entry in tqdm(entries):
     #     posmatches[entry.parent_id] = []
