@@ -15,12 +15,14 @@ from bleualign.align import Aligner
 import os
 from ilmulti.utils.language_utils import inject_token
 import csv
+from sklearn.metrics.pairwise import cosine_similarity
+from collections import namedtuple
 
 
 segmenter = Segmenter()
 root = '/home/darth.vader/.ilmulti/mm-all'
-translator = mm_all(root=root).get_translator()
-translator.cuda()
+# translator = mm_all(root=root).get_translator()
+# translator.cuda()
 tokenizer = SentencePieceTokenizer()
 #aligner = BLEUAligner(translator, tokenizer, segmenter)
 
@@ -72,7 +74,6 @@ def translate():
 #posmatches = {}
 def retrieve():
     delta = timedelta(days = 2)
-
     entries = db.session.query(Translation.parent_id, Entry.date)\
                         .filter(Translation.parent_id == Entry.id)\
                         .order_by(Entry.date.desc())\
@@ -87,6 +88,8 @@ def retrieve():
                     .all()
         for match in matches:
             posmatches[entry.parent_id].append(match.id)   
+
+
     
 #retrieve()
 '''
@@ -96,44 +99,9 @@ with open('posmatches.csv', 'w') as csv_file:
        writer.writerow([key, value])
 
 '''
-from sklearn.feature_extraction.text import TfidfVectorizer
-import numpy as np
-import string
-import re
-from nltk.corpus import stopwords
-from nltk.tokenize import sent_tokenize, word_tokenize
-from nltk.stem import PorterStemmer
-stop_words = set(stopwords.words('english'))
-ps = PorterStemmer()
 
-def preprocess(corpus):
-    processed = []
-    corpus = corpus.splitlines()
-    #corpus = sent_tokenize(corpus)
-    for corp in corpus:
-        translator = str.maketrans('','',string.punctuation)
-        corp = corp.translate(translator)
-        tokens = word_tokenize(corp)
-        no_stop = [ps.stem(w.lower()) for w in tokens if not w in stop_words]
-        alpha = [re.sub(r'\W+', '', a) for a in no_stop]
-        alpha = [a for a in alpha if a]
-        for a in alpha:
-            processed.append(a)
-    return ' '.join(processed)
-
-def get_candidate_vecs(query_id, candidates):
-    corpus = []
-    query_content = Translation.query.filter(Translation.parent_id == query_id).first()
-    query = preprocess(query_content.translated)        
-    content = Entry.query.filter(Entry.id.in_(candidates)).all()
-    for _content in content:
-        processed = preprocess(_content.content)
-        corpus.append(processed)
+from webapp.retrieval import retrieve_neighbours
     
-    vectorizer = TfidfVectorizer()
-    X = vectorizer.fit_transform(corpus)
-    q = vectorizer.transform([query])
-    return q, X
 
 
 with open('posmatches.csv', 'r') as f:
@@ -144,14 +112,5 @@ with open('posmatches.csv', 'r') as f:
         posmatches = posmatches[1:-1].split(',')
         posmatches = [pos.strip(' ') for pos in posmatches]
         candidates = [int(i) for i in posmatches]
-        q, X = get_candidate_vecs(query_id,candidates)
-        
-
-
-
-        
-
-
-
-
-
+        e = retrieve_neighbours(query_id, candidates)
+        print(e)

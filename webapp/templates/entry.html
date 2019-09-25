@@ -1,26 +1,33 @@
-{% extends "layout.html" %}
-{% block body %}
-
+{% extends "layout.html" %} {% block body %} 
 <div class="row">	
-<div class="col-8">
-{{entry.id}} <br/>
-{{entry.date}} <br/>
-
-<code>
-<pre>
-
+    <div class="col-8">
+        {{entry.id}} <br/>
+        <code>
+            <pre>
 {{entry.content}}
-</pre>
+            </pre>
+        </code> 
+    </div>
 
-</code> 
-</div>
+    <div class="col-4">
+        <ul>
+            {% for link in entry.neighbors %}
+            <li>
+                <a href="{{url_for('docstore.parallel', src=link.first_id, tgt=link.second_id)}}">[compare]</a>
+                {{link.second_id}} {{link.second.lang}} 
+            </li>
+            {% endfor %}
+        </ul>
 
-<div class="col-4">
-	<ul>
-{% for link in entry.neighbors %}
-<li><a href="{{url_for('docstore.parallel', src=link.first_id, tgt=link.second_id)}}">[compare]</a>{{link.second_id}} {{link.second.lang}} </li>
-{% endfor %}
-</ul>
-</div>
+        <h6> Retrieved Alignment </h6>
+        <ul>
+            {% for candidate in retrieved %}
+            <li>
+                <a href="{{url_for('docstore.parallel', src=entry.id, tgt=candidate.id)}}">[compare]</a>
+                {{candidate.id}}  {{candidate.similarity}}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
 </div>
 {% endblock %}
