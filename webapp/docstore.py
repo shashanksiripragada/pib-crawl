@@ -19,14 +19,14 @@ tokenizer = SentencePieceTokenizer()
 aligner = BLEUAligner(translator, tokenizer, segmenter)
 
 from flask import Blueprint
-from .retrieval import retrieve_neighbours 
+from .retrieval import retrieve_neighbours_en 
 docstore = Blueprint('docstore', __name__, template_folder='templates')
 
 @docstore.route('/')
 @docstore.route('/entry/<id>')
 def entry(id):
     x =  M.Entry.query.get(id)    
-    retrieved = retrieve_neighbours(x.id)
+    retrieved = retrieve_neighbours_en(x.id)
     return render_template('entry.html', entry=x, retrieved=retrieved)
 
 @docstore.route('/entry', methods=['GET'])

@@ -7,7 +7,7 @@ from datetime import timedelta
 import datetime
 from webapp import db
 from webapp.models import Entry, Link, Translation
-from sqlalchemy import func
+from sqlalchemy import func, and_
 import itertools
 from tqdm import tqdm
 from ilmulti.translator.pretrained import mm_all
@@ -62,24 +62,31 @@ def reorder(candidates, indices, similarities):
     ]
 
 def get_candidates(query_id):
+    langs = ['hi','ml','bn','te','ta','ur']
     delta = timedelta(days = 2)
-    entry = (db.session.query
-                    (Translation.parent_id, Entry.date)
-                    .filter(Translation.parent_id == Entry.id)
-                    .filter(Entry.id == query_id)
-                    .first()
-            )
-
+    query = db.session.query(Entry)\
+                .filter(Entry.id==query_id)\
+                .first()                        
     candidates = []
-    matches = db.session.query(Entry.id) \
-                .filter(Entry.lang=='en') \
-                .filter(Entry.date.between(entry.date-delta,entry.date+delta))\
-                .all()
-    for match in matches:
-        candidates.append(match.id)   
-    return candidates
+    eng_matches = db.session.query(Entry.id) \
+                    .filter(Entry.lang=='en') \
+                    .filter(Entry.date.between(query.date-delta,query.date+delta))\
+                    .all()
 
-def retrieve_neighbours(query_id):
+    noneng_matches = db.session.query(Entry) \
+                    .filter(and_(Entry.lang!='en',Entry.lang.in_(langs))) \
+                    .filter(Entry.date.between(query.date-delta,query.date+delta))\
+                    .all()
+    if query.lang == 'en':
+        for match in noneng_matches:
+            candidates.append((match.id,match.lang))  
+        return candidates
+    else:
+        for match in eng_matches:
+            candidates.append(match.id)   
+        return candidates
+
+def retrieve_neighbours_en(query_id):
     candidates = get_candidates(query_id)
     candidate_corpus = []
     query = Translation.query.filter(Translation.parent_id == query_id).first()
@@ -95,3 +102,31 @@ def retrieve_neighbours(query_id):
     truncate_length = min(5, len(export))
     export = export[:truncate_length]
     return export
+
+
+def retrieve_neighbours_nonen(query_id):
+    candidates = get_candidates(query_id)
+    candidate_ids = defaultdict(list)
+    candidate_corpus = defaultdict(list)
+    export = defaultdict(list)
+    ids = [c[0] for c in candidates]
+    candidate_langs = [c[1] for c in candidates]     
+    query = Entry.query.filter(Entry.id == query_id).first()
+    query_content = preprocess(query.content)     
+    candidate_content = Translation.query\
+                        .filter(Translation.parent_id.in_(ids))\
+                        .all()
+    for lang, content in zip(candidate_langs, candidate_content):
+        processed = preprocess(content.translated)
+        candidate_corpus[lang].append(processed)
+        candidate_ids[lang].append(content.parent_id)
+    for lang in candidate_corpus.keys():
+        indices, similarities = tfidf(query_content, candidate_corpus[lang])
+        export[lang] = reorder(candidate_ids[lang], indices, similarities)
+      
+    for lang in export:
+        length = len(export[lang])
+        truncate_length = min(5, length)
+        export[lang] = export[lang][:truncate_length]
+    return export   
+    

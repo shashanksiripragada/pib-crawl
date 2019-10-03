@@ -10,7 +10,7 @@ class Entry(db.Model):
     city = db.Column(db.String(100))
     neighbors = db.relationship("Link",primaryjoin="Link.first_id==Entry.id")
     translations = db.relationship("Translation", backref="entry")
-
+    retrieve = db.relationship("Retrieval",primaryjoin="Retrieval.query_id==Entry.id")
 
 class Link(db.Model):
     __tablename__ = 'link'
@@ -33,6 +33,18 @@ class Translation(db.Model):
     model = db.Column(db.String(100))
     lang = db.Column(db.String(100))
     translated = db.Column(db.Text)
+
+class Retrieval(db.Model):
+    __tablename__ = 'retrieval'
+    __table_args__ = (
+        db.UniqueConstraint('query_id', 'retrieved_id', name='unique_query_retrieved'),
+    )
+    id = db.Column('id', db.Integer, primary_key = True)
+    query_id = db.Column(db.Integer, db.ForeignKey('entry.id'), nullable=False)
+    retrieved_id = db.Column(db.Integer, db.ForeignKey('entry.id'), nullable=False)
+    score = db.Column(db.Float)
+    q = db.relationship('Entry',foreign_keys=[query_id])
+    retrieved = db.relationship('Entry',foreign_keys=[retrieved_id])
 
 db.create_all()
 

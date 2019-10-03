@@ -6,7 +6,7 @@ from ilmulti.sentencepiece import SentencePieceTokenizer
 from datetime import timedelta 
 import datetime
 from webapp import db
-from webapp.models import Entry, Link, Translation
+from webapp.models import Entry, Link, Translation, Retrieval
 from sqlalchemy import func
 import itertools
 from tqdm import tqdm
@@ -16,13 +16,13 @@ import os
 from ilmulti.utils.language_utils import inject_token
 import csv
 from sklearn.metrics.pairwise import cosine_similarity
-from collections import namedtuple
-
+from collections import namedtuple, defaultdict
+from sqlalchemy import and_
 
 segmenter = Segmenter()
 root = '/home/darth.vader/.ilmulti/mm-all'
-# translator = mm_all(root=root).get_translator()
-# translator.cuda()
+translator = mm_all(root=root).get_translator()
+translator.cuda()
 tokenizer = SentencePieceTokenizer()
 #aligner = BLEUAligner(translator, tokenizer, segmenter)
 
@@ -47,8 +47,8 @@ def detok(src_out):
 
 langs = ['hi','ml','bn','te','ta','ur']
 model = 'mm_all'
-error = open('translate_error.txt','w+')
-'''
+error = open('retrieval_error.txt','w+')
+
 def translate():
     entries = db.session.query(Entry.id,Entry.lang,Entry.date,Entry.content)\
                 .filter(Entry.lang.in_(langs)).all()
@@ -70,15 +70,44 @@ def translate():
                     print(entry.id,fp=error)
 
 #translate()
-'''
 
-from webapp.retrieval import get_candidates,retrieve_neighbours
-    
+from webapp.retrieval import get_candidates,reorder, preprocess, tfidf,retrieve_neighbours_en
 
-with open('posmatches.csv', 'r') as f:
-    data = csv.reader(f)    
-    for row in data:
-        query_id = row[0]
-        e = get_candidates(query_id)
-        n = retrieve_neighbours(query_id)
-        print(n)
+
+def store_retrieved():
+    queries = db.session.query(Translation)\
+                        .all()
+
+    for q in tqdm(queries):
+        if q.translated:
+            exists = Retrieval.query.filter(Retrieval.query_id==q.parent_id).first()
+            if not exists:
+                retrieved = retrieve_neighbours_en(q.parent_id) 
+                retrieved_id = retrieved[0][0]
+                score = retrieved[0][1]        
+                entry = Retrieval(query_id=q.parent_id, retrieved_id=retrieved_id, score=score)
+                try:
+                    db.session.add(entry)
+                    db.session.commit()
+                except:
+                    print(q.parent_id,fp=error)
+store_retrieved()
+
+langs = ['en', 'ml', 'ur', 'te', 'hi', 'pa', 'kn', 'or', 'as', 'gu', 'mr', 'ta', 'bn']
+
+def get_sents():
+    sents = dict.fromkeys(langs,0)
+    matches = db.session.query(Entry) \
+        .filter(Entry.lang.in_(langs)) \
+        .all()
+    for match in matches:
+        if match.content:
+            content_ = match.content.splitlines()
+            count = sents[match.lang]
+            count += len(content_)
+            sents[match.lang] = count
+
+    print(sents)
+#get_sents()
+
+
