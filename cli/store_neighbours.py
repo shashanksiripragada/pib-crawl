@@ -1,7 +1,11 @@
+from tqdm import tqdm
+from webapp.models import Entry, Link, Translation, Retrieval
+from webapp.retrieval import get_candidates,reorder, preprocess 
+from webapp.retrieval import tfidf, retrieve_neighbours_en
 
-from webapp.retrieval import get_candidates,reorder, preprocess, tfidf,retrieve_neighbours_en
 
 def store_retrieved():
+    error = open('retrieval_error.txt','w+')
     queries = db.session.query(Translation)\
                         .all()
     for q in tqdm(queries):
@@ -22,7 +26,6 @@ def store_retrieved():
                         db.session.commit()
                     except:
                         print(q.parent_id,file=error)
-#store_retrieved()
 
 if __name__ == '__main__':
-    pass
+    store_retrieved()
