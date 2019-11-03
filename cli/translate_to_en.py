@@ -15,7 +15,6 @@ from bleualign.align import Aligner
 import os
 from ilmulti.utils.language_utils import inject_token
 import csv
-from sklearn.metrics.pairwise import cosine_similarity
 from collections import namedtuple, defaultdict
 from sqlalchemy import and_
 from ilmulti.align import BLEUAligner
@@ -28,7 +27,7 @@ translator.cuda()
 tokenizer = SentencePieceTokenizer()
 aligner = BLEUAligner(translator, tokenizer, segmenter)
 
-def process(content,tgt_lang):
+def process(content, tgt_lang):
     lang, content = segmenter(content)
     output = []
     for line in content:
@@ -51,53 +50,8 @@ langs = ['hi','ml','bn','te','ta','ur']
 model = 'mm_all'
 error = open('retrieval_error.txt','w+')
 
-def translate():
-    entries = db.session.query(Entry.id,Entry.lang,Entry.date,Entry.content)\
-                .filter(Entry.lang.in_(langs)).all()
-    tgt_lang = 'en'
-    for entry in tqdm(entries):
-        if entry.content:
-            exists = Translation.query.filter(Translation.parent_id==entry.id).first()
-            if not exists:
-                src_tok = process(entry.content,tgt_lang=tgt_lang)
-                out = translator(src_tok)
-                hyps = [ gout['tgt'] for gout in out ]
-                hyps = detok(hyps)
-                translated = '\n'.join(hyps)
-                entry = Translation(parent_id= entry.id, model= model, lang= tgt_lang, translated= translated)
-                try:
-                    db.session.add(entry)
-                    db.session.commit()
-                except:
-                    print(entry.id,fp=error)
 
 #translate()
-
-from webapp.retrieval import get_candidates,reorder, preprocess, tfidf,retrieve_neighbours_en
-
-
-def store_retrieved():
-    queries = db.session.query(Translation)\
-                        .all()
-    for q in tqdm(queries):
-        if q.translated:
-            exists = Retrieval.query.filter(Retrieval.query_id==q.parent_id).first()
-            if not exists:
-                try:
-                    retrieved = retrieve_neighbours_en(q.parent_id)
-                except:
-                    print(q.parent_id,file=error)
-                    continue
-                else:
-                    retrieved_id = retrieved[0][0]
-                    score = retrieved[0][1]   
-                    entry = Retrieval(query_id=q.parent_id, retrieved_id=retrieved_id, score=score)
-                    try:
-                        db.session.add(entry)
-                        db.session.commit()
-                    except:
-                        print(q.parent_id,file=error)
-#store_retrieved()
 
 langs = ['en', 'ml', 'ur', 'te', 'hi', 'pa', 'kn', 'or', 'as', 'gu', 'mr', 'ta', 'bn']
 
@@ -114,7 +68,6 @@ def get_sents():
             sents[match.lang] = count
 
     print(sents)
-#get_sents()
 
 def create_stringio(lines, lang):
     tokenized = [ ' '.join(tokenizer(line, lang=lang)[1]) \
@@ -135,14 +88,16 @@ def detok(src_out):
     return src
 
 langs = ['ml', 'ur', 'te', 'hi', 'ta', 'bn']
-te = open('pib_en-te.te.txt','a')
-en = open('pib_en-te.en.txt','a')
+src_lan = 'ur' 
+tgt_lan = 'en'
+src_file = open('pib_en-{}.{}.txt'.format(src_lan,src_lan),'a')
+tgt_file = open('pib_en-{}.{}.txt'.format(src_lan,tgt_lan),'a')
 
 def paralle_write(src,src_lang,tgt,tgt_lang,article_no):
-    print('##########Article {} #########'.format(article_no),file=te)
-    print(src,file=te)
-    print('##########Article {} #########'.format(article_no),file=en)
-    print(tgt,file=en)
+    print('##########Article {} #########'.format(article_no),file=src_file)
+    print(src,file=src_file)
+    print('##########Article {} #########'.format(article_no),file=tgt_file)
+    print(tgt,file=tgt_file)
 
 def init_align():
     ids = db.session.query(Retrieval)
@@ -157,7 +112,7 @@ def init_align():
         date_link = db.session.query(Link.second_id).filter(Link.first_id==q).distinct().all()
         for link in date_link:
             rlang = db.session.query(Entry.lang).filter(Entry.id==link.second_id).first().lang
-            if rlang=='en' and qlang=='te' and link.second_id==r:
+            if rlang=='en' and qlang=='{}'.format(src_lan) and link.second_id==r:
                 src = db.session.query(Entry.content).filter(Entry.id==q).first().content
                 src_lang = db.session.query(Entry.lang).filter(Entry.id==q).first().lang
                 tgt = db.session.query(Entry.content).filter(Entry.id==r).first().content
