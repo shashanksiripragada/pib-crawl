@@ -1,4 +1,5 @@
-from utils 
+import sys
+sys.path.insert(1, '../')
 from webapp import db
 from webapp.models import Entry, Link, Translation, Retrieval
 from sqlalchemy import and_
@@ -6,7 +7,7 @@ from ilmulti.segment import Segmenter
 from ilmulti.sentencepiece import SentencePieceTokenizer
 from ilmulti.translator.pretrained import mm_all
 from tqdm import tqdm
-from utils import  inject_lang_token, detok
+from utils import inject_lang_token, detok
 
 segmenter = Segmenter()
 tokenizer = SentencePieceTokenizer()
@@ -37,3 +38,6 @@ def translate():
                     db.session.commit()
                 except:
                     print(entry.id,fp=error)
+
+if __name__ == '__main__':
+    translate()

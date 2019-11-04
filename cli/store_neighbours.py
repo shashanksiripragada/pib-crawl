@@ -1,6 +1,8 @@
+import sys
+sys.path.insert(1, '../')
 from tqdm import tqdm
+from webapp import db
 from webapp.models import Entry, Link, Translation, Retrieval
-from webapp.retrieval import get_candidates,reorder, preprocess 
 from webapp.retrieval import tfidf, retrieve_neighbours_en
 
 
