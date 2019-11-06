@@ -14,6 +14,7 @@ from ilmulti.translator.pretrained import mm_all
 from bleualign.align import Aligner
 import os
 from ilmulti.utils.language_utils import inject_token
+from ilmulti.sentencepiece import SentencePieceTokenizer
 import csv
 from sklearn.metrics.pairwise import cosine_similarity
 from collections import namedtuple
@@ -24,6 +25,15 @@ import re
 from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.stem import PorterStemmer
+
+tokenizer = SentencePieceTokenizer()
+
+def detok(src_out):
+    src = []
+    for line in src_out:
+        src_detok = tokenizer.detokenize(line)
+        src.append(src_detok)
+    return src
 
 def preprocess(corpus):
     # takes in document content and returns processed document as string
@@ -86,11 +96,18 @@ def get_candidates(query_id):
             candidates.append(match.id)   
         return candidates
 
+
+
 def retrieve_neighbours_en(query_id):
     candidates = get_candidates(query_id)
     candidate_corpus = []
     query = Translation.query.filter(Translation.parent_id == query_id).first()
-    query_content = preprocess(query.translated)        
+    query_content = query.translated.splitlines()
+    query_content = detok(query_content)    
+    query_content = '\n'.join(query_content)
+
+    query_content = preprocess(query_content)
+
     candidate_content = Entry.query.filter(Entry.id.in_(candidates)).all()
     for content in candidate_content:
         processed = preprocess(content.content)

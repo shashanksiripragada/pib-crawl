@@ -34,7 +34,8 @@ def translate(max_tokens):
         mapping = defaultdict(list)
         for uid in batch.uids:
             uid = uid.split()
-            mapping[int(uid[0])].append(int(uid[1]))
+            idx, line_num = int(uid[0]), int(uid[1])
+            mapping[idx].append(line_num)
 
         start = 0 
         for entry_id in mapping:

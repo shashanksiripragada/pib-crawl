@@ -32,8 +32,7 @@ class BLEUAligner:
 
         # Inject tokens into src_tokenized
         injected_src_tokenized = inject_token(src_tokenized,tgt_lang)
-        # Processing using src_tokenized to get translations
-        # TODO(shashank) accumulate list
+
         generation_output = self.model(injected_src_tokenized)
         hyps = [ gout['tgt'] for gout in generation_output ]
         #hyp_tokenized, hyp_io = create_stringio(hyps, tgt_lang)

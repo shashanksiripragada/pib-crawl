@@ -33,7 +33,7 @@ def entry(id):
 
 @docstore.route('/entry', methods=['GET'])
 def listing():
-    lang = request.args.get('lang', 'hi')
+    lang = request.args.get('lang', 'bn')
     x = (db.session.query(M.Entry)
             .filter(M.Entry.id == M.Translation.parent_id)
             .filter(M.Entry.lang == lang)
