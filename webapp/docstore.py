@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(1, '../')
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask import render_template, request
@@ -10,7 +12,7 @@ from . import db
 from ilmulti.segment import SimpleSegmenter, Segmenter
 from ilmulti.sentencepiece import SentencePieceTokenizer
 from ilmulti.translator.pretrained import mm_all
-from ilmulti.align import BLEUAligner
+from tools.align import BLEUAligner
 
 segmenter = Segmenter()
 root = '/home/darth.vader/.ilmulti/mm-all'

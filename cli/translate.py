@@ -8,7 +8,6 @@ from ilmulti.sentencepiece import SentencePieceTokenizer
 from ilmulti.translator.pretrained import mm_all
 from tqdm import tqdm
 from argparse import ArgumentParser
-#from utils import process, create_stringio
 from ilmulti.utils.language_utils import inject_token
 from utils import BatchBuilder
 from collections import defaultdict
@@ -50,11 +49,7 @@ def translate(max_tokens):
                 db.session.commit()
             except:
                 print(entry.id,fp=error)
-
-        #print(ids,batch.uids)
-        #translated = '\n'.join(hyps)
-        #print(translated)
-
+                
 
 if __name__ == '__main__':
     parser=ArgumentParser()
