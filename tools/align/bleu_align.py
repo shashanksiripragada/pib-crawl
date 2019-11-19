@@ -43,15 +43,15 @@ class BLEUAligner:
 
 
 
-    def bleu_align(self, srcfile, tgtfile, hyp_src_tgt_file):
+    def bleu_align(self, srcfile, tgtfile, hyp_src_tgt_file=None):
         output = StringIO()
         # src_out, tgt_out = StringIO(), StringIO()
         options = {
             'srcfile': srcfile,
             'targetfile': tgtfile,
-            #'galechurch' : True,
+            'galechurch' : True if hyp_src_tgt_file is None else False,
             #'bleu_ngrams' : 4,
-            'srctotarget': [hyp_src_tgt_file],
+            'srctotarget': [hyp_src_tgt_file] if hyp_src_tgt_file else [],
             'targettosrc': [],
             # 'output': output,
             # 'output-src': src_out, 'output-target': tgt_out,

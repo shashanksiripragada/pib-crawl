@@ -3,7 +3,7 @@ sys.path.insert(1, '../')
 from tqdm import tqdm
 from webapp import db
 from webapp.models import Entry, Link, Translation, Retrieval
-from webapp.retrieval import tfidf, retrieve_neighbours_en
+from webapp.retrieval import retrieve_neighbours_en
 
 
 def store_retrieved():
