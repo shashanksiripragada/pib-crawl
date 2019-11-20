@@ -71,9 +71,9 @@ def reorder(candidates, indices, similarities):
         for i in indices
     ]
 
-def get_candidates(query_id):
-    langs = ['hi','ml','bn','te','ta','ur']
-    delta = timedelta(days = 2)
+def get_candidates(query_id, days):
+    langs = ['hi', 'ta', 'te', 'ml', 'ur', 'bn', 'gu', 'mr', 'pa', 'or']
+    delta = timedelta(days = days)
     query = db.session.query(Entry)\
                 .filter(Entry.id==query_id)\
                 .first()                        
@@ -98,10 +98,11 @@ def get_candidates(query_id):
 
 
 
-def retrieve_neighbours_en(query_id):
-    candidates = get_candidates(query_id)
+def retrieve_neighbours_en(query_id, model):
+    candidates = get_candidates(query_id, 2)
     candidate_corpus = []
-    query = Translation.query.filter(Translation.parent_id == query_id).first()
+    query = Translation.query.filter(and_(Translation.parent_id == query_id, \
+                                          Translation.model==model)).first()
     query_content = query.translated.splitlines()
     query_content = detok(query_content)    
     query_content = '\n'.join(query_content)
@@ -122,7 +123,7 @@ def retrieve_neighbours_en(query_id):
 
 
 def retrieve_neighbours_nonen(query_id):
-    candidates = get_candidates(query_id)
+    candidates = get_candidates(query_id, 2)
     candidate_ids = defaultdict(list)
     candidate_corpus = defaultdict(list)
     export = defaultdict(list)

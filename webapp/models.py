@@ -37,12 +37,13 @@ class Translation(db.Model):
 class Retrieval(db.Model):
     __tablename__ = 'retrieval'
     __table_args__ = (
-        db.UniqueConstraint('query_id', 'retrieved_id', name='unique_query_retrieved'),
+        db.UniqueConstraint('query_id', 'retrieved_id', 'model', name='unique_query_retrieved'),
     )
     id = db.Column('id', db.Integer, primary_key = True)
     query_id = db.Column(db.Integer, db.ForeignKey('entry.id'), nullable=False)
     retrieved_id = db.Column(db.Integer, db.ForeignKey('entry.id'), nullable=False)
     score = db.Column(db.Float)
+    model = db.Column(db.String(100))
     q = db.relationship('Entry',foreign_keys=[query_id])
     retrieved = db.relationship('Entry',foreign_keys=[retrieved_id])
 
