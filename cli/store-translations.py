@@ -26,48 +26,50 @@ def translate(segmenter, tokenizer, translator, max_tokens, model, langs, tgt_la
             return False
         translation = Translation.query.filter(and_(Translation.parent_id==entry.id,\
                                 Translation.model==model)).first() 
-        flag = translation is not None
-        return flag
 
-    batches = BatchBuilder(entries, max_tokens, tgt_lang, filter_f=exists)
+    batches = BatchBuilder(segmenter, tokenizer, entries, max_tokens, tgt_lang, filter_f=exists)
+    with tqdm(total=len(entries)) as pbar:
+        for batch in batches:
+            pbar.update(n=batch.state['epb'])
+            # print(batch.state['epb'])
+            pbar.set_postfix(batch.state)
 
-    pbar = tqdm(batches, total=len(entries))
-    for batch in pbar:
-        generation_output = translator(batch.lines)        
-        hyps = [ gout['tgt'] for gout in generation_output ]
-        ids = [ gout['id'] for gout in generation_output ]
-        mapping = defaultdict(list)
-        for uid in batch.uids:
-            uid = uid.split()
-            idx, line_num = int(uid[0]), int(uid[1])
-            mapping[idx].append(line_num)
+            # Translate
+            generation_output = translator(batch.lines)        
 
-        start = 0 
-        
-        for entry_id in mapping:
-            num_lines = len(mapping[entry_id])
-            translated = hyps[start:start+num_lines]
-            translated = '\n'.join(translated)
-            start = num_lines
-            translation = Translation.query.filter(and_(Translation.parent_id==entry_id,Translation.model==model)).first()
+            # Collect
+            hyps = [ gout['tgt'] for gout in generation_output ]
+            ids = [ gout['id'] for gout in generation_output ]
+            mapping = defaultdict(list)
+            for uid in batch.uids:
+                uid = uid.split()
+                idx, line_num = int(uid[0]), int(uid[1])
+                mapping[idx].append(line_num)
+
+            start = 0 
             
-            def modf(entry):
-                try:
-                    db.session.add(entry)
-                    db.session.commit()
-                except:
-                    print(entry_id,file=sys.stderr)
+            for entry_id in mapping:
+                num_lines = len(mapping[entry_id])
+                translated = hyps[start:start+num_lines]
+                translated = '\n'.join(translated)
+                start = num_lines
+                translation = Translation.query.filter(and_(Translation.parent_id==entry_id,Translation.model==model)).first()
+                
+                def modf(entry):
+                    try:
+                        db.session.add(entry)
+                        db.session.commit()
+                    except:
+                        print(entry_id,file=sys.stderr)
 
-            if translation is not None:
-                translation.translated = translated
-                modf(translation)
+                if translation is not None:
+                    translation.translated = translated
+                    modf(translation)
 
-            else:
-                entry = Translation(parent_id= entry_id, model= model, lang= tgt_lang, translated= translated)            
-                modf(entry)
+                else:
+                    entry = Translation(parent_id= entry_id, model= model, lang= tgt_lang, translated= translated)            
+                    modf(entry)
 
-        pbar.update(batch.num_entries)
-        pbar.set_postfix({'epb': batch.num_entries})
 
 if __name__ == '__main__':
     langs = ['hi', 'ta', 'te', 'ml', 'ur', 'bn', 'gu', 'mr', 'pa', 'or']
