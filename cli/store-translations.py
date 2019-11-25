@@ -29,7 +29,7 @@ def translate(segmenter, tokenizer, translator, max_tokens, model, langs, tgt_la
         flag = translation is not None
         return flag
 
-    batches = BatchBuilder(entries, max_tokens, tgt_lang, filter_f=exists)
+    batches = BatchBuilder(segmenter, tokenizer, entries, max_tokens, tgt_lang, filter_f=exists)
 
     pbar = tqdm(batches, total=len(entries))
     for batch in pbar:
@@ -66,8 +66,8 @@ def translate(segmenter, tokenizer, translator, max_tokens, model, langs, tgt_la
                 entry = Translation(parent_id= entry_id, model= model, lang= tgt_lang, translated= translated)            
                 modf(entry)
 
-        pbar.update(batch.num_entries)
-        pbar.set_postfix({'epb': batch.num_entries})
+        pbar.update(batch.state['epb'])
+        pbar.set_postfix(batch.state)
 
 if __name__ == '__main__':
     langs = ['hi', 'ta', 'te', 'ml', 'ur', 'bn', 'gu', 'mr', 'pa', 'or']
