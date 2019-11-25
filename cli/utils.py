@@ -41,19 +41,6 @@ class BatchBuilder:
             content_length += len(line)
         return content_length
 
-    # def create_stringio(self, lines, lang):
-    #     tokenized = [ ' '.join(self.tokenizer(line, lang=lang)[1]) \
-    #             for line in lines ]
-    #     lstring = '\n'.join(tokenized)
-    #     return tokenized, StringIO(lstring)
-
-    # def process(self, content, lang):
-    #     lang, segments = self.segmenter(content, lang=lang)
-    #     tokenized, _io = self.create_stringio(segments, lang)
-    #     return tokenized, _io
-
-
-
     def get_entry(self, entry):
         #print('{} doesnot have translation'.format(entry.id))
         uids, lines = [], []
