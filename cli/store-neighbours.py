@@ -5,11 +5,12 @@ from webapp import db
 from webapp.models import Entry, Link, Translation, Retrieval
 from webapp.retrieval import retrieve_neighbours_en
 from sqlalchemy import func, and_
+from argparse import ArgumentParser
 
 
-def store_retrieved(model):
-    error = open('retrieval_error.txt','w+')
-    reqs = db.session.query(Entry.id).all()
+def store_retrieved(model, langs):
+    
+    reqs = db.session.query(Entry.id).filter(Entry.lang.in_(langs)).all()
     reqs = [req.id for req in reqs]
     queries = db.session.query(Translation)\
                         .filter(and_(Translation.model==model, Translation.parent_id.in_(reqs)))\
@@ -18,6 +19,7 @@ def store_retrieved(model):
         if q.translated:
             exists = Retrieval.query.filter(and_(Retrieval.query_id==q.parent_id, Retrieval.model==model))\
                               .first()
+
             if not exists:
                 try:
                     retrieved = retrieve_neighbours_en(q.parent_id, model)
@@ -36,9 +38,10 @@ def store_retrieved(model):
                         print(q.parent_id,file=error)
 
 if __name__ == '__main__':
-
+    langs = [ 'gu', 'mr', 'pa', 'or']
+    error = open('retrieval_error.txt','w+')
     parser=ArgumentParser()
-    parser.add_argument('model', help='retrieval based on model used for tanslation', required=True)
+    parser.add_argument('--model', help='retrieval based on model used for tanslation', required=True)
     args = parser.parse_args()
     model = args.model
-    store_retrieved(model)
+    store_retrieved(model, langs)

@@ -73,7 +73,7 @@ class BatchBuilder:
             entry = self.entries[self.index]
             flag = self.filter_f(entry)
             if flag:
-                print('{} has translation, skipping entry'.format(entry.id))
+                print('{} has translation for specified model, skipping entry'.format(entry.id))
             if entry.content and not flag:
                 _uids, _lines, max_len, token_count = self.get_entry(entry)
                 uids.extend(_uids)
