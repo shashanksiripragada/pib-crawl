@@ -16,14 +16,14 @@ from collections import defaultdict
 
 
 
-def translate(segmenter, tokenizer, translator, max_tokens, model, langs, tgt_lang = 'en'):  
-
-    #error = open('translate_error.txt','a')      
+def translate(segmenter, tokenizer, translator, max_tokens, model, langs, tgt_lang = 'en', rebuild=False):     
     entries = db.session.query(Entry.id,Entry.lang,Entry.date,Entry.content)\
                 .filter(Entry.lang.in_(langs)).all()
     
     
     def exists(entry):
+        if rebuild:
+            return False
         translation = Translation.query.filter(and_(Translation.parent_id==entry.id,\
                                 Translation.model==model)).first() 
         flag = translation is not None
@@ -46,22 +46,30 @@ def translate(segmenter, tokenizer, translator, max_tokens, model, langs, tgt_la
         for entry_id in mapping:
             num_lines = len(mapping[entry_id])
             translated = hyps[start:start+num_lines]
+            translated = '\n'.join(translated)
             start = num_lines
-            exists = Translation.query.filter(and_(Translation.parent_id==entry_id,Translation.model==model)).first()
-            if not exists:
-                translated = '\n'.join(translated)
-                entry = Translation(parent_id= entry_id, model= model, lang= tgt_lang, translated= translated)            
+            translation = Translation.query.filter(and_(Translation.parent_id==entry_id,Translation.model==model)).first()
+            
+            def modf(entry):
                 try:
                     db.session.add(entry)
                     db.session.commit()
                 except:
                     print(entry_id,file=sys.stderr)
 
+            if translation is not None:
+                translation.translated = translated
+                modf(translation)
+
+            else:
+                entry = Translation(parent_id= entry_id, model= model, lang= tgt_lang, translated= translated)            
+                modf(entry)
+
 
 if __name__ == '__main__':
     langs = ['hi', 'ta', 'te', 'ml', 'ur', 'bn', 'gu', 'mr', 'pa', 'or']
     #model = 'mm_all_iter0'
-    
+    langs = ['ur']
     segmenter = Segmenter()
     tokenizer = SentencePieceTokenizer()
     root = '/home/darth.vader/.ilmulti/mm-all'
@@ -71,6 +79,7 @@ if __name__ == '__main__':
     parser.add_argument('--max_tokens', type=int, help='max_tokens in each batch', required=True)
     parser.add_argument('--model', help='model used to translate', required=True)
     parser.add_argument('--tgt_lang', help='target lang to translate to', required=True)
+    parser.add_argument('--rebuild', help='restore the tranlsation items', action='store_true')
     args = parser.parse_args()
-    max_tokens, model ,tgt_lang = args.max_tokens, args.model, args.tgt_lang
-    translate(segmenter, tokenizer, translator, max_tokens, model, langs, tgt_lang)
+    translate(segmenter, tokenizer, translator, args.max_tokens,\
+             args.model, langs, args.tgt_lang, args.rebuild)
