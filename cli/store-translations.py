@@ -13,17 +13,15 @@ from utils import BatchBuilder
 from sqlalchemy import or_, and_
 from collections import defaultdict
 
-segmenter = Segmenter()
-tokenizer = SentencePieceTokenizer()
-root = '/home/darth.vader/.ilmulti/mm-all'
-translator = mm_all(root=root, use_cuda=True).get_translator()
 
 
-def translate(max_tokens, model):  
-    error = open('translate_error.txt','a')      
+
+def translate(segmenter, tokenizer, translator, max_tokens, model, langs, tgt_lang = 'en'):  
+
+    #error = open('translate_error.txt','a')      
     entries = db.session.query(Entry.id,Entry.lang,Entry.date,Entry.content)\
                 .filter(Entry.lang.in_(langs)).all()
-    tgt_lang = 'en'
+    
     
     def exists(entry):
         translation = Translation.query.filter(and_(Translation.parent_id==entry.id,\
@@ -57,16 +55,22 @@ def translate(max_tokens, model):
                     db.session.add(entry)
                     db.session.commit()
                 except:
-                    print(entry_id,file=error)
+                    print(entry_id,file=sys.stderr)
 
 
 if __name__ == '__main__':
     langs = ['hi', 'ta', 'te', 'ml', 'ur', 'bn', 'gu', 'mr', 'pa', 'or']
     #model = 'mm_all_iter0'
     
+    segmenter = Segmenter()
+    tokenizer = SentencePieceTokenizer()
+    root = '/home/darth.vader/.ilmulti/mm-all'
+    translator = mm_all(root=root, use_cuda=True).get_translator()
+
     parser=ArgumentParser()
     parser.add_argument('--max_tokens', type=int, help='max_tokens in each batch', required=True)
     parser.add_argument('--model', help='model used to translate', required=True)
+    parser.add_argument('--tgt_lang', help='target lang to translate to', required=True)
     args = parser.parse_args()
-    max_tokens, model = args.max_tokens, args.model
-    translate(max_tokens, model)
+    max_tokens, model ,tgt_lang = args.max_tokens, args.model, args.tgt_lang
+    translate(segmenter, tokenizer, translator, max_tokens, model, langs, tgt_lang)
