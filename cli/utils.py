@@ -8,11 +8,12 @@ tokenizer = SentencePieceTokenizer()
 
 
 class Batch:
-    def __init__(self, uids, lines):
+    def __init__(self, uids, lines, num_entries):
         #self.uids = uids
         self.uids = uids
         self.lines = lines
         self.target = None
+        self.num_entries = num_entries
 
     def set_target(self, target):
         self.target = target   
@@ -69,6 +70,7 @@ class BatchBuilder:
         max_length = 0
         tokens = 0
         sizes = []
+        num_entries = 0
         while(current_tokens < self.max_tokens):
             entry = self.entries[self.index]
             flag = self.filter_f(entry)
@@ -81,10 +83,11 @@ class BatchBuilder:
                 max_length = max(max_length, max_len)
                 #tokens += token_count
                 current_tokens += max_length * len(lines)
+                num_entries += 1
             self.index = self.index + 1
             if self.index > len(self.entries):
                 break
-        return Batch(uids, lines)
+        return Batch(uids, lines, num_entries)
 
 
 '''

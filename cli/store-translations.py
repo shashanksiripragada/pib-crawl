@@ -31,7 +31,8 @@ def translate(segmenter, tokenizer, translator, max_tokens, model, langs, tgt_la
 
     batches = BatchBuilder(entries, max_tokens, tgt_lang, filter_f=exists)
 
-    for batch in tqdm(batches):
+    pbar = tqdm(batches, total=len(entries))
+    for batch in pbar:
         generation_output = translator(batch.lines)        
         hyps = [ gout['tgt'] for gout in generation_output ]
         ids = [ gout['id'] for gout in generation_output ]
@@ -65,6 +66,7 @@ def translate(segmenter, tokenizer, translator, max_tokens, model, langs, tgt_la
                 entry = Translation(parent_id= entry_id, model= model, lang= tgt_lang, translated= translated)            
                 modf(entry)
 
+        pbar.update(batch.num_entries)
 
 if __name__ == '__main__':
     langs = ['hi', 'ta', 'te', 'ml', 'ur', 'bn', 'gu', 'mr', 'pa', 'or']
