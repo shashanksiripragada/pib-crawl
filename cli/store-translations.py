@@ -67,6 +67,7 @@ def translate(segmenter, tokenizer, translator, max_tokens, model, langs, tgt_la
                 modf(entry)
 
         pbar.update(batch.num_entries)
+        pbar.set_postfix({'epb': batch.num_entries})
 
 if __name__ == '__main__':
     langs = ['hi', 'ta', 'te', 'ml', 'ur', 'bn', 'gu', 'mr', 'pa', 'or']

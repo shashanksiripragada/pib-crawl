@@ -83,7 +83,7 @@ class BatchBuilder:
                 max_length = max(max_length, max_len)
                 #tokens += token_count
                 current_tokens += max_length * len(lines)
-                num_entries += 1
+            num_entries += 1
             self.index = self.index + 1
             if self.index > len(self.entries):
                 break
