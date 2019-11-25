@@ -19,11 +19,7 @@ root = '/home/darth.vader/.ilmulti/mm-all'
 translator = mm_all(root=root, use_cuda=True).get_translator()
 
 
-langs = ['hi', 'ta', 'te', 'ml', 'ur', 'bn', 'gu', 'mr', 'pa', 'or']
-model = 'mm_all_iter0'
-error = open('translate_error.txt','a')
-
-def translate(max_tokens):        
+def translate(max_tokens, model):        
     entries = db.session.query(Entry.id,Entry.lang,Entry.date,Entry.content)\
                 .filter(Entry.lang.in_(langs)).all()
     tgt_lang = 'en'
@@ -58,7 +54,12 @@ def translate(max_tokens):
 
 
 if __name__ == '__main__':
+    langs = ['hi', 'ta', 'te', 'ml', 'ur', 'bn', 'gu', 'mr', 'pa', 'or']
+    #model = 'mm_all_iter0'
+    error = open('translate_error.txt','a')
     parser=ArgumentParser()
-    parser.add_argument('max_tokens',type=int)
+    parser.add_argument('max_tokens', type=int, help='max_tokens in each batch', required=True)
+    parser.add_argument('model', help='model used to translate', required=True)
     args = parser.parse_args()
-    translate(args.max_tokens)
+    max_tokens, model = args.max_tokens, args.model
+    translate(max_tokens, model)

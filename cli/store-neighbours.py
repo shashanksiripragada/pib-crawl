@@ -6,7 +6,7 @@ from webapp.models import Entry, Link, Translation, Retrieval
 from webapp.retrieval import retrieve_neighbours_en
 from sqlalchemy import func, and_
 
-langs = ['gu', 'mr', 'pa', 'or']
+
 def store_retrieved(model):
     error = open('retrieval_error.txt','w+')
     reqs = db.session.query(Entry.id).all()
@@ -36,5 +36,9 @@ def store_retrieved(model):
                         print(q.parent_id,file=error)
 
 if __name__ == '__main__':
-    model = 'mm_all_iter0'
+
+    parser=ArgumentParser()
+    parser.add_argument('model', help='retrieval based on model used for tanslation', required=True)
+    args = parser.parse_args()
+    model = args.model
     store_retrieved(model)

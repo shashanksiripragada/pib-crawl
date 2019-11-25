@@ -83,7 +83,7 @@ def export(src_lang, tgt_lang, model):
     threshold = calculate_threshold(scores)
 
     for entry in tqdm(entries):
-        #src_io, hyp, hyp_io = get_src_hyp_io(entry.id, tgt_lang, model)
+        src_io, hyp, hyp_io = get_src_hyp_io(entry.id, tgt_lang, model)
         retrieved = db.session.query(Retrieval)\
                             .filter(and_(Retrieval.query_id==entry.id, Retrieval.model==model))\
                             .first()
@@ -92,8 +92,8 @@ def export(src_lang, tgt_lang, model):
         if retrieved:
             retrieved_id, score = retrieved.retrieved_id, retrieved.score
             if retrieved_id in date_links:          
-            #tgt_io = get_tgt_io(retrieved_id)
-            #align(score, threshold=0, src_io, tgt_io, hyp_io, entry.id, retrieved_id)
+                tgt_io = get_tgt_io(retrieved_id)
+                align(score, threshold=0, src_io, tgt_io, hyp_io, entry.id, retrieved_id)
 
 if __name__ == '__main__':
     parser=ArgumentParser()
