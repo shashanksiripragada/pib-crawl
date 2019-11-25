@@ -13,3 +13,4 @@ webapp/*.db-journal
 *.db
 *.swp
 migrations/
+cli/extraction/

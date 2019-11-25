@@ -9,8 +9,7 @@ from sqlalchemy import func, and_
 langs = ['gu', 'mr', 'pa', 'or']
 def store_retrieved(model):
     error = open('retrieval_error.txt','w+')
-    reqs = db.session.query(Entry.id)\
-                      .filter(Entry.lang.in_(langs)).all()
+    reqs = db.session.query(Entry.id).all()
     reqs = [req.id for req in reqs]
     queries = db.session.query(Translation)\
                         .filter(and_(Translation.model==model, Translation.parent_id.in_(reqs)))\
