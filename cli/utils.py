@@ -18,7 +18,8 @@ class Batch:
         self.target = target   
 
 class BatchBuilder:
-    def __init__(self, entries, max_tokens, tgt_lang, max_lines=None):
+    def __init__(self, entries, max_tokens, tgt_lang, max_lines=None, filter_f=lambda x: True):
+        self.filter_f = filter_f
         self.entries = entries
         self.max_tokens = max_tokens
         self.tgt_lang = tgt_lang
@@ -52,6 +53,7 @@ class BatchBuilder:
 
 
     def get_entry(self, entry):
+        #print('{} doesnot have translation'.format(entry.id))
         uids, lines = [], []
         tokenized_lines ,_ = self.process(entry.content, entry.lang)
         injected_lines = inject_token(tokenized_lines, self.tgt_lang)
@@ -69,7 +71,10 @@ class BatchBuilder:
         sizes = []
         while(current_tokens < self.max_tokens):
             entry = self.entries[self.index]
-            if entry.content:
+            flag = self.filter_f(entry)
+            if flag:
+                print('{} has translation, skipping entry'.format(entry.id))
+            if entry.content and not flag:
                 _uids, _lines, max_len, token_count = self.get_entry(entry)
                 uids.extend(_uids)
                 lines.extend(_lines)

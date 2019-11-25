@@ -19,47 +19,54 @@ root = '/home/darth.vader/.ilmulti/mm-all'
 translator = mm_all(root=root, use_cuda=True).get_translator()
 
 
-def translate(max_tokens, model):        
+def translate(max_tokens, model):  
+    error = open('translate_error.txt','a')      
     entries = db.session.query(Entry.id,Entry.lang,Entry.date,Entry.content)\
                 .filter(Entry.lang.in_(langs)).all()
     tgt_lang = 'en'
-    batches = BatchBuilder(entries, max_tokens, tgt_lang)
-    exists = Translation.query.filter(and_(Translation.parent_id==entry_id,Translation.model==model)).first()
-    if not exists:
-        for batch in tqdm(batches):
-            generation_output = translator(batch.lines)        
-            hyps = [ gout['tgt'] for gout in generation_output ]
-            ids = [ gout['id'] for gout in generation_output ]
-            mapping = defaultdict(list)
-            for uid in batch.uids:
-                uid = uid.split()
-                idx, line_num = int(uid[0]), int(uid[1])
-                mapping[idx].append(line_num)
+    
+    def exists(entry):
+        translation = Translation.query.filter(and_(Translation.parent_id==entry.id,\
+                                Translation.model==model)).first() 
+        flag = translation is not None
+        return flag
 
-            start = 0 
-            
-            for entry_id in mapping:
-                num_lines = len(mapping[entry_id])
-                translated = hyps[start:start+num_lines]
-                start = num_lines
-                exists = Translation.query.filter(and_(Translation.parent_id==entry_id,Translation.model==model)).first()
-                if not exists:
-                    translated = '\n'.join(translated)
-                    entry = Translation(parent_id= entry_id, model= model, lang= tgt_lang, translated= translated)            
-                    try:
-                        db.session.add(entry)
-                        db.session.commit()
-                    except:
-                        print(entry_id,file=error)
+    batches = BatchBuilder(entries, max_tokens, tgt_lang, filter_f=exists)
+
+    for batch in tqdm(batches):
+        generation_output = translator(batch.lines)        
+        hyps = [ gout['tgt'] for gout in generation_output ]
+        ids = [ gout['id'] for gout in generation_output ]
+        mapping = defaultdict(list)
+        for uid in batch.uids:
+            uid = uid.split()
+            idx, line_num = int(uid[0]), int(uid[1])
+            mapping[idx].append(line_num)
+
+        start = 0 
+        
+        for entry_id in mapping:
+            num_lines = len(mapping[entry_id])
+            translated = hyps[start:start+num_lines]
+            start = num_lines
+            exists = Translation.query.filter(and_(Translation.parent_id==entry_id,Translation.model==model)).first()
+            if not exists:
+                translated = '\n'.join(translated)
+                entry = Translation(parent_id= entry_id, model= model, lang= tgt_lang, translated= translated)            
+                try:
+                    db.session.add(entry)
+                    db.session.commit()
+                except:
+                    print(entry_id,file=error)
 
 
 if __name__ == '__main__':
     langs = ['hi', 'ta', 'te', 'ml', 'ur', 'bn', 'gu', 'mr', 'pa', 'or']
     #model = 'mm_all_iter0'
-    error = open('translate_error.txt','a')
+    
     parser=ArgumentParser()
-    parser.add_argument('max_tokens', type=int, help='max_tokens in each batch', required=True)
-    parser.add_argument('model', help='model used to translate', required=True)
+    parser.add_argument('--max_tokens', type=int, help='max_tokens in each batch', required=True)
+    parser.add_argument('--model', help='model used to translate', required=True)
     args = parser.parse_args()
     max_tokens, model = args.max_tokens, args.model
     translate(max_tokens, model)
