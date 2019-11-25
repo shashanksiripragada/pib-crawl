@@ -99,8 +99,6 @@ if __name__ == '__main__':
     parser=ArgumentParser()
     parser.add_argument('src_lang', help='non-english language')
     parser.add_argument('tgt_lang', help='english is the target language')
-    #parser.add_argument('src_file', help='src file to write the alignments into')
-    #parser.add_argument('src_file', help='src file to write the alignments into')
     args = parser.parse_args()
     src_lang, tgt_lang = args.src_lang, args.tgt_lang
     #src_file = open('pib_en-{}.{}.txt'.format(src_lang, src_lang),'a')

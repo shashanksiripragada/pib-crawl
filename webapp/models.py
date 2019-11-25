@@ -37,7 +37,7 @@ class Translation(db.Model):
 class Retrieval(db.Model):
     __tablename__ = 'retrieval'
     __table_args__ = (
-        db.UniqueConstraint('query_id', 'retrieved_id', 'model', name='unique_query_retrieved'),
+        db.UniqueConstraint('query_id', 'retrieved_id', 'model', name='unique_query_retrieved_model'),
     )
     id = db.Column('id', db.Integer, primary_key = True)
     query_id = db.Column(db.Integer, db.ForeignKey('entry.id'), nullable=False)
