@@ -29,7 +29,7 @@ def paralle_write(src_entry, src_lang, tgt_entry, tgt_lang, q_id, r_id):
     print('##########Article {} #########'.format(r_id),file=tgt_file)
     print(tgt_entry,file=tgt_file)
 
-def store_aligned_date(src_lang, tgt_lang, model):
+def export(src_lang, tgt_lang, model):
     ids = db.session.query(Retrieval).filter(Retrieval.model==model).all()
     for i in tqdm(ids):
         q = i.query_id
@@ -71,5 +71,5 @@ if __name__ == '__main__':
     src_file = open('pib_en-{}.{}.txt'.format(src_lang, src_lang),'a')
     tgt_file = open('pib_en-{}.{}.txt'.format(src_lang, tgt_lang),'a')
     model = 'mm_all_iter0'
-    store_aligned_date(src_lang, tgt_lang, model)
+    export(src_lang, tgt_lang, model)
 
