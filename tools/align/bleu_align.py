@@ -35,11 +35,12 @@ class BLEUAligner:
 
         generation_output = self.model(injected_src_tokenized)
         hyps = [ gout['tgt'] for gout in generation_output ]
-        #hyp_tokenized, hyp_io = create_stringio(hyps, tgt_lang)
-        hyps = '\n'.join(hyps)
-        hyp_io = StringIO(hyps)
+        #hyp_tokenized, hyp_io = create_stringio(hyps, tgt_lang) 
+        hyp_io = StringIO('\n'.join(hyps))
 
-        return self.bleu_align(src_io, tgt_io, hyp_io)
+        src, tgt = self.bleu_align(src_io, tgt_io, hyp_io)
+
+        return (src_tokenized, hyps), (src, tgt) 
 
 
 

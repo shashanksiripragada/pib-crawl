@@ -10,6 +10,7 @@
     </div>
 
     <div class="col-4">
+        <h6> Date based matches </h6>
         <ul>
             {% for link in entry.neighbors %}
             <li>
@@ -19,12 +20,13 @@
             {% endfor %}
         </ul>
 
-        <h6> Retrieved Alignment </h6>
+        <h6> Retrieval based matches </h6>
+        <p> All retrieved articles are in English(en). </p>
         <ul>
             {% for candidate in retrieved %}
             <li>
                 <a href="{{url_for('docstore.parallel', src=entry.id, tgt=candidate.id)}}">[compare]</a>
-                {{candidate.id}}  {{candidate.similarity}}
+                {{candidate.id}}  {{'%0.2f'| format(candidate.similarity|float)}}
             </li>
             {% endfor %}
         </ul>
