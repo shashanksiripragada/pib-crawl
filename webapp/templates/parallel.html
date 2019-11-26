@@ -2,22 +2,44 @@
 {% block body %}
 
 
+
 {% block content %}
 	<div class="row">
 	{% for entry in entries %}
 		<div class="col-6">
-		{{entry.id}} <br/>
-		{{entry.date}} <br/>
-		<code>
-<pre>
-{{entry.content}} 
-</pre>
-		</code>
+			<div class="row">
+				<div class="col-6">
+					<div class="input-group input-group-sm mb-3">
+					  <div class="input-group-prepend">
+					    <span class="input-group-text" id="inputGroup-sizing-sm">id</span>
+					  </div>
+					  <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" value="{{entry.id}}" >
+					</div>
+				</div>
+				<div class="col-6">
+					<div class="input-group input-group-sm mb-3">
+					  <div class="input-group-prepend">
+					    <span class="input-group-text" id="inputGroup-sizing-sm">Date</span>
+					  </div>
+					  <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" value="{{entry.date}}" >
+					</div>
+				</div>
+			</div>
+
+	<div class="row">
+		<div class="col-12">
+			{{entry.content|safe}} 
+		</div>
+	</div>
+	
+
 	</div>
 		<br/>
 	{% endfor %}
 	</div>
 	<a class="btn btn-primary" href="{{url_for('docstore.parallel_align', src=entries[0].id, tgt=entries[1].id)}}">Align</a>
+
+
 
 {% endblock %}
 

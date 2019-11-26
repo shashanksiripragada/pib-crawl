@@ -33,7 +33,7 @@ def entry(id):
 
 @docstore.route('/entry', methods=['GET'])
 def listing():
-    lang = request.args.get('lang', 'bn')
+    lang = request.args.get('lang', 'hi')
     x = (db.session.query(M.Entry)
             .filter(M.Entry.id == M.Translation.parent_id)
             .filter(M.Entry.lang == lang)
@@ -42,12 +42,20 @@ def listing():
         )
     return render_template('listing.html', entries=x)
 
+
 @docstore.route('/parallel')
 def parallel():
     src = request.args.get('src')
     tgt = request.args.get('tgt')
     src_entry =  M.Entry.query.get(src)
     tgt_entry =  M.Entry.query.get(tgt)
+    def wrap_in_para(text):
+        lines = text.splitlines()
+        wrap = lambda l: '<p>{}</p>'.format(l)
+        lines = list(map(wrap, lines))
+        return '\n'.join(lines)
+    src_entry.content = wrap_in_para(src_entry.content)
+    tgt_entry.content = wrap_in_para(tgt_entry.content) 
     return render_template('parallel.html', entries=[src_entry,tgt_entry])
 
 
@@ -57,8 +65,10 @@ def parallel_align():
     tgt = request.args.get('tgt')
     src_entry =  M.Entry.query.get(src)
     tgt_entry =  M.Entry.query.get(tgt)
-    src_out, tgt_out = aligner(src_entry.content, src_entry.lang, 
+    translation, alignments = aligner(src_entry.content, src_entry.lang, 
         tgt_entry.content, tgt_entry.lang)
+    src_toks, hyp_toks = translation
+    
     def detok(src_out):
         src = []
         for line in src_out:
@@ -66,12 +76,36 @@ def parallel_align():
             src.append(src_detok)
         return src
 
-    src = detok(src_out)
-    tgt = detok(tgt_out)
-    
-    src_entry.content = '\n'.join(src)
-    tgt_entry.content = '\n'.join(tgt)
-    return render_template('parallel.html', entries=[src_entry,tgt_entry])
+    def process(src_out, tgt_out):
+        src = detok(src_out)
+        tgt = detok(tgt_out)
+        def wrap_pairwise(src, tgt):
+            def create_individual(pair):
+                src_line, tgt_line = pair
+                fmt = '<div class="row" style="border:1px solid black; margin-bottom:1em;"><div class="col-6">{}</div><div class="col-6">{}</div></div>'.format(src_line,tgt_line)
+                return fmt   
+            rows = map(create_individual,zip(src, tgt))  
+            rows = list(rows)    
+            rows = '\n'.join(rows)
+            return rows
+        content = wrap_pairwise(src, tgt)
+        return content
+    #src_entry.content = '\n'.join(src)
+    #tgt_entry.content = '\n'.join(tgt)
+    translation_content = process(src_toks, hyp_toks)
+    src_out, tgt_out = alignments
+    aligned_content = process(src_out, tgt_out)
+    def wrap_in_para(text):
+        lines = text.splitlines()
+        wrap = lambda l: '<p>{}</p>'.format(l)
+        lines = list(map(wrap, lines))
+        return '\n'.join(lines)
+    src_entry.content = wrap_in_para(src_entry.content)
+    tgt_entry.content = wrap_in_para(tgt_entry.content) 
+
+    return render_template('parallel_translate.html', entries=[src_entry,tgt_entry],
+                            translation_content=translation_content, 
+                            aligned_content = aligned_content)
 
 
 @docstore.route('/entry2/<id>')
