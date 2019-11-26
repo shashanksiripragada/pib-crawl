@@ -35,7 +35,6 @@ class BLEUAligner:
 
         generation_output = self.model(injected_src_tokenized)
         hyps = [ gout['tgt'] for gout in generation_output ]
-        #hyp_tokenized, hyp_io = create_stringio(hyps, tgt_lang) 
         hyp_io = StringIO('\n'.join(hyps))
 
         src, tgt = self.bleu_align(src_io, tgt_io, hyp_io)
@@ -63,13 +62,7 @@ class BLEUAligner:
 
         srcs = src_out.getvalue().splitlines()
         tgts = tgt_out.getvalue().splitlines()
-        '''
-        src = self.detok(srcs)
-        tgt = self.detok(tgts)
-        src_entry = '\n'.join(src)
-        tgt_entry = '\n'.join(tgt)
-        print(src_entry, tgt_entry)
-        '''
+
         return srcs, tgts
 
     def detok(self, src_out):

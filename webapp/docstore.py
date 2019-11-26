@@ -68,7 +68,7 @@ def parallel_align():
     translation, alignments = aligner(src_entry.content, src_entry.lang, 
         tgt_entry.content, tgt_entry.lang)
     src_toks, hyp_toks = translation
-    src_out, tgt_out = alignments
+    
     def detok(src_out):
         src = []
         for line in src_out:
@@ -82,7 +82,7 @@ def parallel_align():
         def wrap_pairwise(src, tgt):
             def create_individual(pair):
                 src_line, tgt_line = pair
-                fmt = '<div class="row" style="border:1px solid black;"><div class="col-6">{}</div><div class="col-6">{}</div></div>'.format(src_line,tgt_line)
+                fmt = '<div class="row" style="border:1px solid black; margin-bottom:1em;"><div class="col-6">{}</div><div class="col-6">{}</div></div>'.format(src_line,tgt_line)
                 return fmt   
             rows = map(create_individual,zip(src, tgt))  
             rows = list(rows)    
@@ -93,7 +93,16 @@ def parallel_align():
     #src_entry.content = '\n'.join(src)
     #tgt_entry.content = '\n'.join(tgt)
     translation_content = process(src_toks, hyp_toks)
+    src_out, tgt_out = alignments
     aligned_content = process(src_out, tgt_out)
+    def wrap_in_para(text):
+        lines = text.splitlines()
+        wrap = lambda l: '<p>{}</p>'.format(l)
+        lines = list(map(wrap, lines))
+        return '\n'.join(lines)
+    src_entry.content = wrap_in_para(src_entry.content)
+    tgt_entry.content = wrap_in_para(tgt_entry.content) 
+
     return render_template('parallel_translate.html', entries=[src_entry,tgt_entry],
                             translation_content=translation_content, 
                             aligned_content = aligned_content)
