@@ -3,7 +3,7 @@ from ilmulti.utils.language_utils import inject_token
 from ilmulti.segment import SimpleSegmenter, Segmenter
 from ilmulti.sentencepiece import SentencePieceTokenizer
 from collections import defaultdict
-
+from copy import deepcopy
 
 
 class Batch:
@@ -55,22 +55,32 @@ class BatchBuilder:
     def next_batch(self):
         uids, lines = [], []
         state = defaultdict(int)
-
-        while(state['ptpb'] < self.max_tokens):
+        update_flag = True
+        while(update_flag):
             entry = self.entries[self.index]
             flag = self.filter_f(entry)
             if flag:
                 print('{} has translation for specified model, skipping entry'.format(entry.id))
             if entry.content and not flag:
                 _uids, _lines, max_len, token_count = self.get_entry(entry)
-                uids.extend(_uids)
-                lines.extend(_lines)
-                state['max_length'] = max(state['max_length'], max_len)
-                state['tpb'] += token_count
-                state['ptpb'] = state['max_length'] * len(lines)
+
+                future_state = deepcopy(state)
+                def update_state_dict(state):
+                    state['max_length'] = max(state['max_length'], max_len)
+                    state['tpb'] += token_count
+                    state['ptpb'] = state['max_length'] * len(lines)  
+
+                update_state_dict(future_state)
+                update_flag = future_state['ptpb'] < self.max_tokens
+
+                if update_flag:
+                    uids.extend(_uids)
+                    lines.extend(_lines)
+                    self.index = self.index + 1
+                    state.update(future_state)                            
             state['epb'] += 1
 
-            self.index = self.index + 1
+            
             if self.index > len(self.entries):
                 break
         return Batch(uids, lines, state)

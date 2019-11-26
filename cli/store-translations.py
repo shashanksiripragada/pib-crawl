@@ -56,11 +56,9 @@ def translate(segmenter, tokenizer, translator, max_tokens, model, langs, tgt_la
                 translation = Translation.query.filter(and_(Translation.parent_id==entry_id,Translation.model==model)).first()
                 
                 def modf(entry):
-                    try:
-                        db.session.add(entry)
-                        db.session.commit()
-                    except:
-                        print(entry_id,file=sys.stderr)
+                    db.session.add(entry)
+                    db.session.commit()
+                    #print(entry_id,file=sys.stderr)
 
                 if translation is not None:
                     translation.translated = translated
@@ -74,7 +72,7 @@ def translate(segmenter, tokenizer, translator, max_tokens, model, langs, tgt_la
 if __name__ == '__main__':
     langs = ['hi', 'ta', 'te', 'ml', 'ur', 'bn', 'gu', 'mr', 'pa', 'or']
     #model = 'mm_all_iter0'
-    langs = ['ur']
+    langs = ['or']
     segmenter = Segmenter()
     tokenizer = SentencePieceTokenizer()
     root = '/home/darth.vader/.ilmulti/mm-all'

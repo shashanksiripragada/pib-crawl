@@ -35,11 +35,10 @@ def store_retrieved(model, langs):
                         db.session.add(entry)
                         db.session.commit()
                     except:
-                        print(q.parent_id,file=error)
+                        print(q.parent_id,file=file=sys.stderr)
 
 if __name__ == '__main__':
     langs = [ 'gu', 'mr', 'pa', 'or']
-    error = open('retrieval_error.txt','w+')
     parser=ArgumentParser()
     parser.add_argument('--model', help='retrieval based on model used for tanslation', required=True)
     args = parser.parse_args()
