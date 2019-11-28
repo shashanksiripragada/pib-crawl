@@ -50,6 +50,7 @@ class BLEUAligner:
             'srcfile': srcfile,
             'targetfile': tgtfile,
             'galechurch' : True if hyp_src_tgt_file is None else False,
+            'no_translation_override':True if hyp_src_tgt_file is None else False,
             #'bleu_ngrams' : 4,
             'srctotarget': [hyp_src_tgt_file] if hyp_src_tgt_file else [],
             'targettosrc': [],
