@@ -98,7 +98,7 @@ def get_candidates(query_id, days):
 
 
 
-def retrieve_neighbours_en(query_id, model='mm_all'):
+def retrieve_neighbours_en(query_id, model='mm_all_iter0'):
     candidates = get_candidates(query_id, 2)
     candidate_corpus = []
     query = Translation.query.filter(and_(Translation.parent_id == query_id, \

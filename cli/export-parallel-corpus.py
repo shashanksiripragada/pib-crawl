@@ -1,4 +1,5 @@
 import sys
+import numpy as np
 sys.path.insert(1, '../')
 from webapp import db
 from io import StringIO
@@ -7,11 +8,12 @@ from ilmulti.segment import Segmenter
 from ilmulti.sentencepiece import SentencePieceTokenizer
 from ilmulti.translator.pretrained import mm_all
 from bleualign.align import Aligner
-from utils import detok, process, create_stringio
+from utils import Preproc
 from tools.align import BLEUAligner
 from tqdm import tqdm
 from argparse import ArgumentParser
 from sqlalchemy import func, and_
+from urduhack.tokenization import sentence_tokenizer
 langs = ['hi', 'ta', 'te', 'ml', 'ur', 'bn', 'gu', 'mr', 'pa', 'or']
 
 segmenter = Segmenter()
@@ -52,7 +54,7 @@ def paralle_write(src_entry, src_lang, tgt_entry, tgt_lang, q_id, r_id):
 
 
 def align(score, threshold, src_io, tgt_io, hyp_io, q, r):
-    #if score >= threshold:  
+    if score >= threshold:  
         src_aligned, tgt_aligned = aligner.bleu_align(src_io, tgt_io, hyp_io)
         src_aligned = detok(src_aligned)
         tgt_aligned = detok(tgt_aligned)               
@@ -66,22 +68,21 @@ def calculate_threshold(scores):
     mean = np.mean(scores)
     var = np.var(scores)
     std = np.std(scores)
-    plt.hist(scores, bins=10)
-    plt.ylabel('article counts');
-    plt.savefig('./plots/{}.png'.format(src_lang))
-    return mean - std
+    # plt.hist(scores, bins=10)
+    # plt.ylabel('article counts');
+    # plt.savefig('./plots/{}.png'.format(src_lang))
+    return mean, mean - std
 
 
 def export(src_lang, tgt_lang, model):
     entries = db.session.query(Entry).filter(Entry.lang==src_lang).all()
-    entries = [entry.id for entry in entries]
-    retrieved = db.session.query(Retrieval)\
-                     .filter(and_(Retrieval.query_id.in_(entries), Retrieval.model==model))\
-                     .all()
-    scores = [r.score for r in retrieved if r]
-    retrieved_ids = [r.retrieved_id for r in retrieved if r]        
-    threshold = calculate_threshold(scores)
-
+    # entries = [entry.id for entry in entries]
+    # retrieved = db.session.query(Retrieval)\
+    #                  .filter(and_(Retrieval.query_id.in_(entries), Retrieval.model==model))\
+    #                  .all()
+    # scores = [r.score for r in retrieved if r]     
+    # mean, threshold = calculate_threshold(scores)
+    # print(mean, threshold)
     for entry in tqdm(entries):
         src_io, hyp, hyp_io = get_src_hyp_io(entry.id, tgt_lang, model)
         retrieved = db.session.query(Retrieval)\
@@ -91,10 +92,10 @@ def export(src_lang, tgt_lang, model):
         date_links = get_datelinks(entry)
         if retrieved:
             retrieved_id, score = retrieved.retrieved_id, retrieved.score
-            if retrieved_id in date_links:          
-                tgt_io = get_tgt_io(retrieved_id)
-                align(score, threshold=0, src_io, tgt_io, hyp_io, entry.id, retrieved_id)
-
+            if retrieved_id in date_links:       
+                #tgt_io = get_tgt_io(retrieved_id)
+                #align(score, threshold=0, src_io, tgt_io, hyp_io, entry.id, retrieved_id)
+    print(count)
 if __name__ == '__main__':
     parser=ArgumentParser()
     parser.add_argument('src_lang', help='non-english language')

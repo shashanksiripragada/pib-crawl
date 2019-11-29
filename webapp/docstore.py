@@ -13,12 +13,14 @@ from ilmulti.segment import SimpleSegmenter, Segmenter
 from ilmulti.sentencepiece import SentencePieceTokenizer
 from ilmulti.translator.pretrained import mm_all
 from tools.align import BLEUAligner
+from cli.utils import Preproc
 
 segmenter = Segmenter()
 root = '/home/darth.vader/.ilmulti/mm-all'
-translator = mm_all(root=root).get_translator()
+translator = mm_all(root=root, use_cuda=True).get_translator()
 tokenizer = SentencePieceTokenizer()
 aligner = BLEUAligner(translator, tokenizer, segmenter)
+preproc = Preproc(segmenter, tokenizer)
 
 from flask import Blueprint
 from .retrieval import retrieve_neighbours_en 
@@ -29,18 +31,27 @@ docstore = Blueprint('docstore', __name__, template_folder='templates')
 def entry(id):
     x =  M.Entry.query.get(id)    
     retrieved = retrieve_neighbours_en(x.id)
+    #if x.neighbors:
     return render_template('entry.html', entry=x, retrieved=retrieved)
 
 @docstore.route('/entry', methods=['GET'])
 def listing():
-    lang = request.args.get('lang', 'hi')
-    x = (db.session.query(M.Entry)
-            .filter(M.Entry.id == M.Translation.parent_id)
-            .filter(M.Entry.lang == lang)
+    lang = request.args.get('lang', 'or')
+    x = db.session.query(M.Entry)\
+            .filter(M.Entry.lang == lang)\
             .all()
-            # .limit(200)
-        )
-    return render_template('listing.html', entries=x)
+    entries = set()
+    date_aligned = 0    
+    for entry in x:
+        if entry.neighbors:
+            links = entry.neighbors
+            for link in links:
+                if link.second.lang=='en':
+                    entries.add(entry)
+                    date_aligned+=1
+    entries = list(entries)
+    print(date_aligned)
+    return render_template('listing.html', entries=entries)
 
 
 @docstore.route('/parallel')
@@ -63,10 +74,12 @@ def parallel():
 def parallel_align():
     src = request.args.get('src')
     tgt = request.args.get('tgt')
+    galechurch = request.args.get('galechurch', 'False')
     src_entry =  M.Entry.query.get(src)
     tgt_entry =  M.Entry.query.get(tgt)
+
     translation, alignments = aligner(src_entry.content, src_entry.lang, 
-        tgt_entry.content, tgt_entry.lang)
+        tgt_entry.content, tgt_entry.lang, galechurch=(str(galechurch)=='True'))
     src_toks, hyp_toks = translation
     
     def detok(src_out):
@@ -106,6 +119,9 @@ def parallel_align():
     return render_template('parallel_translate.html', entries=[src_entry,tgt_entry],
                             translation_content=translation_content, 
                             aligned_content = aligned_content)
+
+
+
 
 
 @docstore.route('/entry2/<id>')

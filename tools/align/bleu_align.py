@@ -9,7 +9,7 @@ class BLEUAligner:
         self.segmenter = segmenter
 
 
-    def __call__(self, src, src_lang, tgt, tgt_lang):
+    def __call__(self, src, src_lang, tgt, tgt_lang, galechurch=False):
         """
             Input: Paragraphs in two languages and their language codes.
             Output: Obtained parallel sentences using BLEUAlign
@@ -23,12 +23,16 @@ class BLEUAligner:
 
         def process(content, lang):
             lang, segments = self.segmenter(content, lang=lang)
-
             tokenized, _io = create_stringio(segments, lang)
             return tokenized, _io
 
         src_tokenized, src_io = process(src, src_lang)
         tgt_tokenized, tgt_io = process(tgt, tgt_lang)
+        
+        print('using galechurch:', galechurch)
+        if galechurch==True:
+            src, tgt = self.bleu_align(src_io, tgt_io, hyp_src_tgt_file=None)
+            return ([], []) , (src, tgt)
 
         # Inject tokens into src_tokenized
         injected_src_tokenized = inject_token(src_tokenized,tgt_lang)
