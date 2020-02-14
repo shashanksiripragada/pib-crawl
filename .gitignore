@@ -11,4 +11,6 @@ webapp/*.db
 webapp/*.db-journal
 *.pyc
 *.db
+*.swp
 migrations/
+cli/extraction/

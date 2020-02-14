@@ -55,20 +55,6 @@ tgtfile = open('tgtfile.txt','r')
 hyp_src_tgt_file = open('hyp_src_tgt_file.txt','r')
 '''
 
-def align(srcfile,tgtfile,hyp_src_tgt_file):
-	options = {
-	'srcfile': srcfile,
-	'targetfile': tgtfile,
-	'srctotarget': [hyp_src_tgt_file],
-	'targettosrc': [],
-	#'output': output,
-	'output-src': outsrc, 'output-target': outtgt,
-	}
-	a = Aligner(options)
-	a.mainloop()
-	output_src, output_target = a.results()
-	return output_src, output_target
-
 
 segmenter = Segmenter()
 translator = mm_all()
@@ -106,7 +92,7 @@ def ifexists():
 			tokens = ' '.join(_out)
 			hyp_src_tgt = tokens
 	align(src,tgt,hyp_src_tgt)		
-ifexists()
+#ifexists()
 
 
 
