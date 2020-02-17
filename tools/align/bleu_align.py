@@ -58,6 +58,7 @@ class BLEUAligner:
             #'bleu_ngrams' : 4,
             'srctotarget': [hyp_src_tgt_file] if hyp_src_tgt_file else [],
             'targettosrc': [],
+            'verbosity' : 0,
             # 'output': output,
             # 'output-src': src_out, 'output-target': tgt_out,
 	   }

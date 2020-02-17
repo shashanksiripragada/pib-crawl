@@ -21,7 +21,7 @@ tokenizer = SentencePieceTokenizer()
 root = '/home/darth.vader/.ilmulti/mm-all'
 translator = mm_all(root=root, use_cuda=True).get_translator()
 aligner = BLEUAligner(translator, tokenizer, segmenter)
-
+preproc = Preproc(segmenter, tokenizer)
 
 def get_datelinks(entry):
     links = []
@@ -33,7 +33,7 @@ def get_datelinks(entry):
 
 def get_src_hyp_io(src_id, tgt_lang, model):
     entry = db.session.query(Entry.content, Entry.lang).filter(Entry.id==src_id).first()
-    src_tok , src_io = process(entry.content, entry.lang)
+    src_tok , src_io = preproc.process(entry.content, entry.lang)
     hyp = db.session.query(Translation).\
             filter(and_(Translation.parent_id==src_id, Translation.model==model)).\
             first().translated
@@ -42,7 +42,7 @@ def get_src_hyp_io(src_id, tgt_lang, model):
 
 def get_tgt_io(retrieved_id):
     tgt = db.session.query(Entry.content, Entry.lang).filter(Entry.id==retrieved_id).first()
-    tgt_tokenized , tgt_io = process(tgt.content, tgt.lang)
+    tgt_tokenized , tgt_io = preproc.process(tgt.content, tgt.lang)
     return tgt_io
 
 
@@ -53,15 +53,14 @@ def paralle_write(src_entry, src_lang, tgt_entry, tgt_lang, q_id, r_id):
     print(tgt_entry,file=tgt_file)
 
 
-def align(score, threshold, src_io, tgt_io, hyp_io, q, r):
-    if score >= threshold:  
-        src_aligned, tgt_aligned = aligner.bleu_align(src_io, tgt_io, hyp_io)
-        src_aligned = detok(src_aligned)
-        tgt_aligned = detok(tgt_aligned)               
-        src_entry = '\n'.join(src_aligned)
-        tgt_entry = '\n'.join(tgt_aligned)
-        paralle_write(src_entry, src_lang, tgt_entry, \
-                        tgt_lang, q, r)
+def align(score, threshold, src_io, tgt_io, hyp_io, q, r): 
+    src_aligned, tgt_aligned = aligner.bleu_align(src_io, tgt_io, hyp_io)
+    src_aligned = preproc.detok(src_aligned)
+    tgt_aligned = preproc.detok(tgt_aligned)               
+    src_entry = '\n'.join(src_aligned)
+    tgt_entry = '\n'.join(tgt_aligned)
+    paralle_write(src_entry, src_lang, tgt_entry, \
+                    tgt_lang, q, r)
 
 
 def calculate_threshold(scores):
@@ -71,18 +70,17 @@ def calculate_threshold(scores):
     # plt.hist(scores, bins=10)
     # plt.ylabel('article counts');
     # plt.savefig('./plots/{}.png'.format(src_lang))
-    return mean, mean - std
+    return mean+1.5*std
 
 
 def export(src_lang, tgt_lang, model):
     entries = db.session.query(Entry).filter(Entry.lang==src_lang).all()
-    # entries = [entry.id for entry in entries]
-    # retrieved = db.session.query(Retrieval)\
-    #                  .filter(and_(Retrieval.query_id.in_(entries), Retrieval.model==model))\
-    #                  .all()
-    # scores = [r.score for r in retrieved if r]     
-    # mean, threshold = calculate_threshold(scores)
-    # print(mean, threshold)
+    entry_list = [entry.id for entry in entries]
+    retrieved = db.session.query(Retrieval)\
+                     .filter(and_(Retrieval.query_id.in_(entry_list), Retrieval.model==model))\
+                     .all()
+    scores = [r.score for r in retrieved if r]     
+    threshold = calculate_threshold(scores)
     for entry in tqdm(entries):
         src_io, hyp, hyp_io = get_src_hyp_io(entry.id, tgt_lang, model)
         retrieved = db.session.query(Retrieval)\
@@ -92,18 +90,20 @@ def export(src_lang, tgt_lang, model):
         date_links = get_datelinks(entry)
         if retrieved:
             retrieved_id, score = retrieved.retrieved_id, retrieved.score
-            if retrieved_id in date_links:       
-                #tgt_io = get_tgt_io(retrieved_id)
-                #align(score, threshold=0, src_io, tgt_io, hyp_io, entry.id, retrieved_id)
-    print(count)
+            #if retrieved_id in date_links:
+            if score>=threshold:       
+                tgt_io = get_tgt_io(retrieved_id)
+                align(score, threshold, src_io, tgt_io, hyp_io, entry.id, retrieved_id)
+
+
 if __name__ == '__main__':
     parser=ArgumentParser()
     parser.add_argument('src_lang', help='non-english language')
     parser.add_argument('tgt_lang', help='english is the target language')
     args = parser.parse_args()
     src_lang, tgt_lang = args.src_lang, args.tgt_lang
-    #src_file = open('pib_en-{}.{}.txt'.format(src_lang, src_lang),'a')
-    #tgt_file = open('pib_en-{}.{}.txt'.format(src_lang, tgt_lang),'a')
+    src_file = open('pib_en-{}.{}.txt'.format(src_lang, src_lang),'a')
+    tgt_file = open('pib_en-{}.{}.txt'.format(src_lang, tgt_lang),'a')
     if src_lang in ['gu', 'mr', 'pa', 'or']:
         model = 'mm_all_iter0'
     else:

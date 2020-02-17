@@ -3,28 +3,27 @@ sys.path.insert(1, '../')
 from io import StringIO
 from ilmulti.segment import Segmenter
 from ilmulti.sentencepiece import SentencePieceTokenizer
-from utils import detok, process, create_stringio
 from tqdm import tqdm
 from argparse import ArgumentParser
 import langid
-
+from utils import Preproc
 from langid.langid import LanguageIdentifier, model
 identifier = LanguageIdentifier.from_modelstring(model, norm_probs=True)
 
 #langs = ['en', 'ml', 'ur', 'te', 'hi', 'pa', 'kn', 'or', 'as', 'gu', 'mr', 'ta', 'bn']
 
-#segmenter = Segmenter()
-#tokenizer = SentencePieceTokenizer()
+segmenter = Segmenter()
+tokenizer = SentencePieceTokenizer()
 #root = '/home/darth.vader/.ilmulti/mm-all'
 #translator = mm_all(root=root).get_translator()
 #translator.cuda()
 #aligner = BLEUAligner(translator, tokenizer, segmenter)
-
+preproc = Preproc(segmenter, tokenizer)
 
 
 def parallel_write(src_lang, src_entry, tgt_lang, tgt_entry):
-    src_out = open('./pib/filtered/pib_en-{}.{}.filt.txt'.format(src_lang, src_lang),'a')
-    tgt_out = open('./pib/filtered/pib_en-{}.{}.filt.txt'.format(src_lang, tgt_lang),'a')
+    src_out = open('train.en-{}.{}'.format(src_lang, src_lang),'a')
+    tgt_out = open('train.en-{}.{}'.format(src_lang, tgt_lang),'a')
     print(src_entry,file=src_out)
     print(tgt_entry,file=tgt_out)
 
