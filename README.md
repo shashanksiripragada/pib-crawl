@@ -23,4 +23,8 @@ created.
 Resources:
 
 1. [Database](https://iiitaphyd-my.sharepoint.com/:f:/g/personal/shashank_siripragada_alumni_iiit_ac_in/Er-14LL4gatMuE8naqGUQuMBw1QyWeLCocHijQK-eDbsCw?e=f4T3Ol) containing the crawled news articles, which are used to extract parallel corpus.
-2. The [NMT model](https://iiitaphyd-my.sharepoint.com/:f:/g/personal/shashank_siripragada_alumni_iiit_ac_in/Er-14LL4gatMuE8naqGUQuMBw1QyWeLCocHijQK-eDbsCw?e=f4T3Ol) use for sentence alignment and the associated vocabulary files. 
+2. The [Multilingual NMT model](https://iiitaphyd-my.sharepoint.com/:f:/g/personal/shashank_siripragada_alumni_iiit_ac_in/Er-14LL4gatMuE8naqGUQuMBw1QyWeLCocHijQK-eDbsCw?e=f4T3Ol) used for sentence alignment and the associated vocabulary files.
+3. We additionally release [multilingual model](https://iiitaphyd-my.sharepoint.com/:f:/g/personal/shashank_siripragada_alumni_iiit_ac_in/Er-14LL4gatMuE8naqGUQuMBw1QyWeLCocHijQK-eDbsCw?e=f4T3Ol) augmented with the PIB corpus.
+
+Installation:
+
