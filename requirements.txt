@@ -1,0 +1,6 @@
+flask
+flask_migrate
+flask_sqlalchemy
+git+https://github.com/rsennrich/Bleualign
+git+https://github.com/jerinphilip/ilmulti.git@pib
+

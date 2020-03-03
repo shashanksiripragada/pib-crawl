@@ -6,7 +6,6 @@ pibcacheempty/
 pibcacheerror/
 __pycache__/
 pool.py
-*.txt
 webapp/*.db
 webapp/*.db-journal
 *.pyc
@@ -14,3 +13,11 @@ webapp/*.db-journal
 *.swp
 migrations/
 cli/extraction/
+text_dump/
+cli/*.txt
+cli/mplus_15sig/
+cli/mplussig/
+cli/test.en
+cli/test.mr
+retrieval_error.txt
+translate_error.txt
