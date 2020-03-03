@@ -19,19 +19,15 @@ langs = ['hi', 'ta', 'te', 'ml', 'ur', 'bn', 'gu', 'mr', 'pa', 'or']
 segmenter = Segmenter()
 # tokenizer = SentencePieceTokenizer()
 # root = '/home/darth.vader/.ilmulti/mm-all'
-
 # preproc = Preproc(segmenter, tokenizer)
 
 
 def paralle_write(src_entry, src_lang):
-    #print('##########Article {} #########'.format(q_id),file=src_file)
     print(src_entry,file=src_file)
-
 
 
 def export(src_lang):
     entries = db.session.query(Entry).filter(Entry.lang==src_lang).all()
-    #entry_list = [entry.id for entry in entries]
     for entry in tqdm(entries):
         print(entry.id)
         lang, segments = segmenter(entry.content, lang=src_lang)
@@ -43,11 +39,8 @@ def export(src_lang):
 if __name__ == '__main__':
     parser=ArgumentParser()
     parser.add_argument('src_lang', help='language of mono corpus')
-    #parser.add_argument('tgt_lang', help='english is the target language')
     args = parser.parse_args()
-    #src_lang, tgt_lang = args.src_lang, args.tgt_lang
     src_lang = args.src_lang
     src_file = open('pib_mono.{}.txt'.format(src_lang),'a')
-    #tgt_file = open('pib_en-{}.{}.txt'.format(src_lang, tgt_lang),'a')
     export(src_lang)
 
