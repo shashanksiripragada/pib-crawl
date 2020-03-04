@@ -21,7 +21,12 @@ We require the web application for the reasons below:
    but hidden from a layman user or expert to gather simple feedback.
 
 ## Installation
+```bash
+# --user is optional
+python3 -m pip install -r requirements.txt --user  
+python3 setup.py install --user 
 
+```
 
 
 ## Resources
