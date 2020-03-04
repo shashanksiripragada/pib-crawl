@@ -12,8 +12,7 @@ from ilmulti.utils.language_utils import inject_token
 from utils import BatchBuilder
 from sqlalchemy import or_, and_
 from collections import defaultdict
-
-
+from cli import ILMULTI_DIR
 
 
 def translate(segmenter, tokenizer, translator, max_tokens, model, langs, tgt_lang = 'en', rebuild=False):     
@@ -75,7 +74,7 @@ if __name__ == '__main__':
     langs = ['or']
     segmenter = Segmenter()
     tokenizer = SentencePieceTokenizer()
-    root = '/home/darth.vader/.ilmulti/mm-all'
+    root = os.path.join(ILMULTI_DIR, 'mm-all')
     translator = mm_all(root=root, use_cuda=True).get_translator()
 
     parser=ArgumentParser()

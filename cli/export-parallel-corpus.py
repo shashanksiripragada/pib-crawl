@@ -14,11 +14,12 @@ from tqdm import tqdm
 from argparse import ArgumentParser
 from sqlalchemy import func, and_
 from urduhack.tokenization import sentence_tokenizer
+from cli import ILMULTI_DIR
 langs = ['hi', 'ta', 'te', 'ml', 'ur', 'bn', 'gu', 'mr', 'pa', 'or']
 
 segmenter = Segmenter()
 tokenizer = SentencePieceTokenizer()
-root = '/home/darth.vader/.ilmulti/mm-all'
+root = os.path.join(ILMULTI_DIR, 'mm-all')
 translator = mm_all(root=root, use_cuda=True).get_translator()
 aligner = BLEUAligner(translator, tokenizer, segmenter)
 preproc = Preproc(segmenter, tokenizer)

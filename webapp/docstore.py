@@ -1,3 +1,4 @@
+import os
 import sys
 sys.path.insert(1, '../')
 from flask import Flask
@@ -13,10 +14,11 @@ from ilmulti.segment import SimpleSegmenter, Segmenter
 from ilmulti.sentencepiece import SentencePieceTokenizer
 from ilmulti.translator.pretrained import mm_all
 from tools.align import BLEUAligner
+from cli import ILMULTI_DIR
 from cli.utils import Preproc
 
 segmenter = Segmenter()
-root = '/home/darth.vader/.ilmulti/mm-all'
+root = os.path.join(ILMULTI_DIR, 'mm-all')
 translator = mm_all(root=root, use_cuda=True).get_translator()
 tokenizer = SentencePieceTokenizer()
 aligner = BLEUAligner(translator, tokenizer, segmenter)
