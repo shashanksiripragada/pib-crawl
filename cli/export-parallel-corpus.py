@@ -1,5 +1,7 @@
+import os
 import sys
 import numpy as np
+sys.path.insert(1, os.getcwd())
 sys.path.insert(1, '../')
 from webapp import db
 from io import StringIO
@@ -8,7 +10,7 @@ from ilmulti.segment import Segmenter
 from ilmulti.sentencepiece import SentencePieceTokenizer
 from ilmulti.translator.pretrained import mm_all
 from bleualign.align import Aligner
-from utils import Preproc
+from cli.utils import Preproc
 from tools.align import BLEUAligner
 from tqdm import tqdm
 from argparse import ArgumentParser

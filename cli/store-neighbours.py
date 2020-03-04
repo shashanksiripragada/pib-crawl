@@ -1,4 +1,5 @@
 import sys
+sys.path.insert(1, os.getcwd())
 sys.path.insert(1, '../')
 from tqdm import tqdm
 from webapp import db

@@ -23,8 +23,23 @@ We require the web application for the reasons below:
 ## Installation
 ```bash
 # --user is optional
-python3 -m pip install -r requirements.txt --user  
-python3 setup.py install --user 
+python3 -m pip install -r requirements.txt --user
+
+```
+After installing the required packages, run the following script to download the PIB database containing the crawled articles.
+
+```bash
+# --user is optional
+python3 -m pip install -r requirements.txt --user
+
+```
+
+
+## Usage
+To extract parallel corpus from the database run the following command.
+
+```bash
+python3 cli/export-parallel-corpus.py [src_lang] [tgt_lang] 
 
 ```
 

@@ -1,4 +1,5 @@
 import sys
+sys.path.insert(1, os.getcwd())
 sys.path.insert(1, '../')
 from io import StringIO
 from ilmulti.segment import Segmenter
