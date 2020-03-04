@@ -26,23 +26,19 @@ We require the web application for the reasons below:
 python3 -m pip install -r requirements.txt --user
 
 ```
-After installing the required packages, run the following script to download the PIB database containing the crawled articles.
+After installing the required packages, run the following script to download the PIB database containing the crawled articles. This script also downloads pretrained multilingual model used for alignment.
 
 ```bash
-# --user is optional
-python3 -m pip install -r requirements.txt --user
-
+bash get-resources.sh
 ```
 
-
 ## Usage
-To extract parallel corpus from the database run the following command.
+Once we have the DB and pretrained model in place, to extract parallel corpus from the database run the following command.
 
 ```bash
 python3 cli/export-parallel-corpus.py [src_lang] [tgt_lang] 
 
 ```
-
 
 ## Resources
 1. The PIB-v0 and Mann-ki-Baat(mkb) datasets are available [here](http://preon.iiit.ac.in/~jerin/resources/datasets).
