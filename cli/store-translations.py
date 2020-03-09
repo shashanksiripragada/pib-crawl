@@ -1,3 +1,4 @@
+import os
 import sys
 sys.path.insert(1, os.getcwd())
 sys.path.insert(1, '../')
@@ -26,6 +27,10 @@ def translate(segmenter, tokenizer, translator, max_tokens, model, langs, tgt_la
             return False
         translation = Translation.query.filter(and_(Translation.parent_id==entry.id,\
                                 Translation.model==model)).first() 
+        if translation:
+            return True
+        else:
+            return False
 
     batches = BatchBuilder(segmenter, tokenizer, entries, max_tokens, tgt_lang, filter_f=exists)
     with tqdm(total=len(entries)) as pbar:
@@ -70,9 +75,9 @@ def translate(segmenter, tokenizer, translator, max_tokens, model, langs, tgt_la
 
 
 if __name__ == '__main__':
-    langs = ['hi', 'ta', 'te', 'ml', 'ur', 'bn', 'gu', 'mr', 'pa', 'or']
+    langs = ['hi']#['bn', 'gu', 'mr', 'pa', 'or'] #[ur] done--#[hi, ta te ml]
     #model = 'mm_all_iter0'
-    langs = ['or']
+    #langs = ['or']
     segmenter = Segmenter()
     tokenizer = SentencePieceTokenizer()
     root = os.path.join(ILMULTI_DIR, 'mm-all')

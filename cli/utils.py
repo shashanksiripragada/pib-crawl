@@ -60,7 +60,9 @@ class BatchBuilder:
             entry = self.entries[self.index]
             flag = self.filter_f(entry)
             if flag:
-                print('{} has translation for specified model, skipping entry'.format(entry.id))
+                print('{} {} has translation for specified model, skipping entry'.format(entry.lang, entry.id))
+                self.index = self.index+1
+
             if entry.content and not flag:
                 _uids, _lines, max_len, token_count = self.get_entry(entry)
 
@@ -72,12 +74,14 @@ class BatchBuilder:
 
                 update_state_dict(future_state)
                 update_flag = future_state['ptpb'] < self.max_tokens
-
                 if update_flag:
                     uids.extend(_uids)
                     lines.extend(_lines)
                     self.index = self.index + 1
-                    state.update(future_state)                            
+                    state.update(future_state)
+            if not entry.content:
+                self.index = self.index+1
+
             state['epb'] += 1
 
             
