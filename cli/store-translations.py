@@ -76,8 +76,6 @@ def translate(segmenter, tokenizer, translator, max_tokens, model, langs, tgt_la
 
 if __name__ == '__main__':
     langs = ['hi']#['bn', 'gu', 'mr', 'pa', 'or'] #[ur] done--#[hi, ta te ml]
-    #model = 'mm_all_iter0'
-    #langs = ['or']
     segmenter = Segmenter()
     tokenizer = SentencePieceTokenizer()
     root = os.path.join(ILMULTI_DIR, 'mm-all')

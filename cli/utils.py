@@ -5,7 +5,7 @@ from ilmulti.sentencepiece import SentencePieceTokenizer
 from collections import defaultdict
 from copy import deepcopy
 from urduhack.tokenization import sentence_tokenizer
-
+f=open('translate_error.txt','a')
 class Batch:
     def __init__(self, uids, lines, state):
         #self.uids = uids
@@ -59,18 +59,29 @@ class BatchBuilder:
         while(update_flag):
             entry = self.entries[self.index]
             flag = self.filter_f(entry)
+
+            if not entry.content:
+                print('{} {} has no content, skipping entry'.format(entry.lang, entry.id))
+                self.index = self.index+1
+            
             if flag:
                 print('{} {} has translation for specified model, skipping entry'.format(entry.lang, entry.id))
                 self.index = self.index+1
 
-            if entry.content and not flag:
+            if entry.content and not flag:             
                 _uids, _lines, max_len, token_count = self.get_entry(entry)
+                current_ptpb = len(_lines) * max_len
+                if current_ptpb > self.max_tokens:
+                    # skip very large entries
+                    self.index = self.index + 1
 
                 future_state = deepcopy(state)
                 def update_state_dict(state):
+                    #look ahead for update
                     state['max_length'] = max(state['max_length'], max_len)
                     state['tpb'] += token_count
-                    state['ptpb'] = state['max_length'] * len(lines)  
+                    num_lines = len(lines)+len(_lines)
+                    state['ptpb'] = state['max_length'] * num_lines 
 
                 update_state_dict(future_state)
                 update_flag = future_state['ptpb'] < self.max_tokens
@@ -79,12 +90,8 @@ class BatchBuilder:
                     lines.extend(_lines)
                     self.index = self.index + 1
                     state.update(future_state)
-            if not entry.content:
-                self.index = self.index+1
+            state['epb'] += 1    
 
-            state['epb'] += 1
-
-            
             if self.index > len(self.entries):
                 break
         return Batch(uids, lines, state)
