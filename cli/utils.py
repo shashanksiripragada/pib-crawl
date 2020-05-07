@@ -1,3 +1,4 @@
+import os
 from io import StringIO
 from ilmulti.utils.language_utils import inject_token
 from ilmulti.segment import SimpleSegmenter, Segmenter
@@ -5,7 +6,7 @@ from ilmulti.sentencepiece import SentencePieceTokenizer
 from collections import defaultdict
 from copy import deepcopy
 from urduhack.tokenization import sentence_tokenizer
-f=open('translate_error.txt','a')
+
 class Batch:
     def __init__(self, uids, lines, state):
         #self.uids = uids
@@ -114,7 +115,7 @@ class Preproc:
 
     def process(self, content, lang):
         if lang == 'ur':
-            lang, segments = sentence_tokenizer(entry.content)
+            lang, segments = sentence_tokenizer(content)
             tokenized, _io = self.create_stringio(segments, lang)
             return tokenized, _io
         lang, segments = self.segmenter(content, lang=lang)
@@ -127,3 +128,29 @@ class Preproc:
             src_detok = self.tokenizer.detokenize(line)
             src.append(src_detok)
         return src   
+
+class ParallelWriter:
+    def __init__(self, fpath, fname):
+        self.fpath = fpath
+        self.fname = fname
+        self.files = {}
+
+    def get_fp(self, src, tgt):
+        
+        if not os.path.exists(fpath):
+            os.makedirs(fpath)
+
+        if (src, tgt) in self.files:
+            return self.files[(src, tgt)]
+
+
+        self.files[(src, tgt)] = [
+            open(os.path.join(fpath, '{}.{}'.format(fname, src)), 'w'),
+            open(os.path.join(fpath, '{}.{}'.format(fname, tgt)), 'w')
+        ]
+        return self.files[(src, tgt)]
+
+    def write(self, src, tgt, srcline, tgtline):
+        srcfile, tgtfile = self.get_fp(src, tgt)
+        print(srcline, file=srcfile)
+        print(tgtline, file=tgtfile)

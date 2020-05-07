@@ -10,7 +10,6 @@ from webapp.models import Entry, Link, Translation
 from sqlalchemy import func, and_
 import itertools
 from tqdm import tqdm
-from ilmulti.translator.pretrained import mm_all
 from bleualign.align import Aligner
 import os
 from ilmulti.utils.language_utils import inject_token
@@ -98,7 +97,7 @@ def get_candidates(query_id, days):
 
 
 
-def retrieve_neighbours_en(query_id, model='mm_all_iter0'):
+def retrieve_neighbours_en(query_id, model):
     candidates = get_candidates(query_id, 2)
     candidate_corpus = []
     query = Translation.query.filter(and_(Translation.parent_id == query_id, \

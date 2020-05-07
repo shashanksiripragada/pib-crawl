@@ -5,12 +5,13 @@ sys.path.insert(1, os.getcwd())
 sys.path.insert(1, '../')
 from webapp import db
 from io import StringIO
+import matplotlib.pyplot as plt
 from webapp.models import Entry, Link, Translation, Retrieval
 from ilmulti.segment import Segmenter
 from ilmulti.sentencepiece import SentencePieceTokenizer
 from ilmulti.translator.pretrained import mm_all
 from bleualign.align import Aligner
-from cli.utils import Preproc
+from cli.utils import Preproc, ParallelWriter
 from tools.align import BLEUAligner
 from tqdm import tqdm
 from argparse import ArgumentParser
@@ -26,6 +27,7 @@ translator = mm_all(root=root, use_cuda=True).get_translator()
 aligner = BLEUAligner(translator, tokenizer, segmenter)
 preproc = Preproc(segmenter, tokenizer)
 
+
 def get_datelinks(entry):
     links = []
     date_links = entry.neighbors
@@ -35,17 +37,21 @@ def get_datelinks(entry):
     return list(set(links))
 
 def get_src_hyp_io(src_id, tgt_lang, model):
-    entry = db.session.query(Entry.content, Entry.lang).filter(Entry.id==src_id).first()
-    src_tok , src_io = preproc.process(entry.content, entry.lang)
-    hyp = db.session.query(Translation).\
-            filter(and_(Translation.parent_id==src_id, Translation.model==model)).\
-            first().translated
-    hyp_io = StringIO(hyp)
-    return src_io, hyp, hyp_io
+    src_io, hyp_io = None, None
+    exists = False
+    entry = db.session.query(Entry.content, Entry.lang).filter(Entry.id==src_id).first()    
+    hyp = db.session.query(Translation).filter(\
+                    and_(Translation.parent_id==src_id, Translation.model==model)).first()
+
+    if hyp and entry.content and hyp.translated:
+        exists = True
+        _, src_io = preproc.process(entry.content, entry.lang)
+        hyp_io = StringIO(hyp.translated)
+    return src_io, hyp_io, exists
 
 def get_tgt_io(retrieved_id):
     tgt = db.session.query(Entry.content, Entry.lang).filter(Entry.id==retrieved_id).first()
-    tgt_tokenized , tgt_io = preproc.process(tgt.content, tgt.lang)
+    tgt_tokenized, tgt_io = preproc.process(tgt.content, tgt.lang)
     return tgt_io
 
 
@@ -54,6 +60,7 @@ def paralle_write(src_entry, src_lang, tgt_entry, tgt_lang, q_id, r_id):
     print(src_entry,file=src_file)
     #print('##########Article {} #########'.format(r_id),file=tgt_file)
     print(tgt_entry,file=tgt_file)
+
 
 
 def align(score, threshold, src_io, tgt_io, hyp_io, q, r): 
@@ -70,10 +77,11 @@ def calculate_threshold(scores):
     mean = np.mean(scores)
     var = np.var(scores)
     std = np.std(scores)
-    # plt.hist(scores, bins=10)
-    # plt.ylabel('article counts');
-    # plt.savefig('./plots/{}.png'.format(src_lang))
-    return mean+1.5*std
+    plt.hist(scores, bins=10)
+    plt.ylabel('article counts');
+    plt.savefig('./extraction/plots/{}_new.png'.format(src_lang))
+    print(mean,var,std)
+    return mean#std#mean+std
 
 
 def export(src_lang, tgt_lang, model):
@@ -85,18 +93,20 @@ def export(src_lang, tgt_lang, model):
     scores = [r.score for r in retrieved if r]     
     threshold = calculate_threshold(scores)
     for entry in tqdm(entries):
-        src_io, hyp, hyp_io = get_src_hyp_io(entry.id, tgt_lang, model)
-        retrieved = db.session.query(Retrieval)\
-                            .filter(and_(Retrieval.query_id==entry.id, Retrieval.model==model))\
-                            .first()
-
         date_links = get_datelinks(entry)
-        if retrieved:
-            retrieved_id, score = retrieved.retrieved_id, retrieved.score
-            #if retrieved_id in date_links:
-            if score>=threshold:       
+        src_io, hyp_io, exists = get_src_hyp_io(entry.id, tgt_lang, model)
+        if exists:            
+            retrieved = db.session.query(Retrieval)\
+                                .filter(and_(Retrieval.query_id==entry.id, Retrieval.model==model))\
+                                .first()
+
+            if retrieved:
+                retrieved_id, score = retrieved.retrieved_id, retrieved.score
                 tgt_io = get_tgt_io(retrieved_id)
-                align(score, threshold, src_io, tgt_io, hyp_io, entry.id, retrieved_id)
+                if retrieved_id in date_links:
+                    align(score, threshold, src_io, tgt_io, hyp_io, entry.id, retrieved_id)
+                elif score>=threshold:                    
+                    align(score, threshold, src_io, tgt_io, hyp_io, entry.id, retrieved_id)
 
 
 if __name__ == '__main__':
@@ -105,11 +115,13 @@ if __name__ == '__main__':
     parser.add_argument('tgt_lang', help='english is the target language')
     args = parser.parse_args()
     src_lang, tgt_lang = args.src_lang, args.tgt_lang
-    src_file = open('pib_en-{}.{}.txt'.format(src_lang, src_lang),'a')
-    tgt_file = open('pib_en-{}.{}.txt'.format(src_lang, tgt_lang),'a')
-    if src_lang in ['gu', 'mr', 'pa', 'or']:
-        model = 'mm_all_iter0'
-    else:
-        model = 'mm_all'
+    #fpath = os.getcwd()
+    #fname = 'pib_{}-{}'.format(tgt_lang, src_lang)
+    #pwriter = ParallelWriter(fpath, fname)
+    model = 'mm_all_iter1'
+    src_file = open('pib_{}_en-{}.{}.txt'.format(model, src_lang, src_lang),'a')
+    tgt_file = open('pib_{}_en-{}.{}.txt'.format(model, src_lang, tgt_lang),'a')
+    
     export(src_lang, tgt_lang, model)
+
 

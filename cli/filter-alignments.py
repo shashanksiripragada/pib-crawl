@@ -1,3 +1,4 @@
+import os
 import sys
 sys.path.insert(1, os.getcwd())
 sys.path.insert(1, '../')
@@ -15,10 +16,6 @@ identifier = LanguageIdentifier.from_modelstring(model, norm_probs=True)
 
 segmenter = Segmenter()
 tokenizer = SentencePieceTokenizer()
-#root = '/home/darth.vader/.ilmulti/mm-all'
-#translator = mm_all(root=root).get_translator()
-#translator.cuda()
-#aligner = BLEUAligner(translator, tokenizer, segmenter)
 preproc = Preproc(segmenter, tokenizer)
 
 
@@ -38,7 +35,7 @@ def eval_len_ratio(src_len, tgt_len):
         return True
 
 def eval_lang(src_lang, src_line, tgt_lang, tgt_line):
-    threshold = 0.9
+    threshold = 0.8
     slang, src_prob = identifier.classify(src_line)
     tlang, tgt_prob = identifier.classify(tgt_line)
     src = (src_prob >= threshold)
@@ -74,8 +71,9 @@ if __name__ == '__main__':
     #parser.add_argument('tgt_file', help='src file to write the alignments into')
     args = parser.parse_args()
     src_lang, tgt_lang = args.src_lang, args.tgt_lang
-    src_file = open('pib_en-{}.{}.txt'.format(src_lang, src_lang),'r')
-    tgt_file = open('pib_en-{}.{}.txt'.format(src_lang, tgt_lang),'r')
+    model = 'mm_all_iter1'
+    src_file = open('pib_{}_en-{}.{}.txt'.format(model, src_lang, src_lang),'r')
+    tgt_file = open('pib_{}_en-{}.{}.txt'.format(model, src_lang, tgt_lang),'r')
 
     identifier.set_languages(['{}'.format(src_lang),'{}'.format(tgt_lang)])
     filter_lines(src_lang, src_file, tgt_lang, tgt_file)

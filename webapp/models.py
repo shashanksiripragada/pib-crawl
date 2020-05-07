@@ -44,8 +44,9 @@ class Retrieval(db.Model):
     retrieved_id = db.Column(db.Integer, db.ForeignKey('entry.id'), nullable=False)
     score = db.Column(db.Float)
     model = db.Column(db.String(100))
-    q = db.relationship('Entry',foreign_keys=[query_id])
-    retrieved = db.relationship('Entry',foreign_keys=[retrieved_id])
+    qry = db.relationship('Entry',foreign_keys=[query_id])
+    ret = db.relationship('Entry',foreign_keys=[retrieved_id])
+
 
 db.create_all()
 
