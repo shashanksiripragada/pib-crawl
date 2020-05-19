@@ -6,9 +6,10 @@ class Entry(db.Model):
     id = db.Column('id', db.Integer, primary_key = True)
     lang = db.Column(db.String(100))
     date = db.Column(db.DateTime, default=datetime.datetime.utcnow, index=True)
+    title = db.Column(db.Text)
     content = db.Column(db.Text)
     city = db.Column(db.String(100))
-    neighbors = db.relationship("Link",primaryjoin="Link.first_id==Entry.id")
+    neighbors = db.relationship("Link", primaryjoin="Link.first_id==Entry.id")
     translations = db.relationship("Translation", backref="entry")
     retrieve = db.relationship("Retrieval",primaryjoin="Retrieval.query_id==Entry.id")
 
@@ -47,6 +48,18 @@ class Retrieval(db.Model):
     qry = db.relationship('Entry',foreign_keys=[query_id])
     ret = db.relationship('Entry',foreign_keys=[retrieved_id])
 
+
+class Titles(db.Model):
+    """
+        Lookup table for titles in english and their translations.
+    """
+    __tablename__ = 'titles'
+    __table_args__ = (
+        db.UniqueConstraint('en_title', 'nonen_title', name='unique_title_translated'),
+    )
+    id = db.Column('id', db.Integer, primary_key = True)
+    en_title = db.Column(db.Text)
+    nonen_title = db.Column(db.Text)
 
 db.create_all()
 
