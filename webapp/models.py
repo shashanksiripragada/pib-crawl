@@ -58,6 +58,7 @@ class Titles(db.Model):
         db.UniqueConstraint('en_title', 'nonen_title', name='unique_title_translated'),
     )
     id = db.Column('id', db.Integer, primary_key = True)
+    ministry_id = db.Column(db.Integer)
     en_title = db.Column(db.Text)
     nonen_title = db.Column(db.Text)
 
