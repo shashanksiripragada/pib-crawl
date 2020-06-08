@@ -7,7 +7,7 @@ from flask import render_template, request
 from flask_migrate import Migrate
 from datetime import datetime, timedelta 
 from sqlalchemy import and_
-from collections import Counter
+from collections import Counter, defaultdict
 from . import models as M
 from . import db
 from ilmulti.segment import SimpleSegmenter, Segmenter
@@ -31,14 +31,18 @@ docstore = Blueprint('docstore', __name__, template_folder='templates')
 @docstore.route('/')
 @docstore.route('/entry/<id>')
 def entry(id):
-    x =  M.Entry.query.get(id)    
-    retrieved = retrieve_neighbours_en(x.id)
+    x =  M.Entry.query.get(id)
+    models = ['mm_toEN_iter1', 'mm_all_iter1', 'mm_all_iter0']
+    group = defaultdict(list)
+    for model in models:
+        retrieved = retrieve_neighbours_en(x.id, model=model)
+        group[model] = retrieved
     #if x.neighbors:
-    return render_template('entry.html', entry=x, retrieved=retrieved)
+    return render_template('entry.html', entry=x, retrieved=group)
 
 @docstore.route('/entry', methods=['GET'])
 def listing():
-    lang = request.args.get('lang', 'or')
+    lang = request.args.get('lang', 'hi')
     x = db.session.query(M.Entry)\
             .filter(M.Entry.lang == lang)\
             .all()

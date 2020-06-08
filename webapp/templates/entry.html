@@ -1,6 +1,6 @@
 {% extends "layout.html" %} {% block body %} 
 <div class="row">	
-    <div class="col-8">
+    <div class="col-6">
         {{entry.id}} <br/>
         <code>
             <pre>
@@ -9,27 +9,34 @@
         </code> 
     </div>
 
-    <div class="col-4">
+    <div class="col-6">
         <h6> Date based matches </h6>
         <ul>
             {% for link in entry.neighbors %}
             <li>
-                <a href="{{url_for('docstore.parallel', src=link.first_id, tgt=link.second_id)}}">[compare]</a>
-                {{link.second_id}} {{link.second.lang}} 
+                <a href="{{url_for('docstore.parallel', src=link.first_id, tgt=link.second_id)}}">
+                {{link.second_id}} </a> {{link.second.lang}} 
             </li>
             {% endfor %}
         </ul>
 
         <h6> Retrieval based matches </h6>
         <p> All retrieved articles are in English(en). </p>
-        <ul>
-            {% for candidate in retrieved %}
-            <li>
-                <a href="{{url_for('docstore.parallel', src=entry.id, tgt=candidate.id)}}">[compare]</a>
-                {{candidate.id}}  {{'%0.2f'| format(candidate.similarity|float)}}
-            </li>
-            {% endfor %}
-        </ul>
+        <div class="row">
+        {% for model, candidates in retrieved.items() %}
+            <div class="col-4">
+                <p> {{model}} </p>
+                <ul>
+                    {% for candidate in candidates %}
+                    <li>
+                        <a href="{{url_for('docstore.parallel', src=entry.id, tgt=candidate.id)}}">
+                        {{candidate.id}}</a> {{'%0.2f'| format(candidate.similarity|float)}}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endfor %}
+        </div>
     </div>
 </div>
 {% endblock %}
