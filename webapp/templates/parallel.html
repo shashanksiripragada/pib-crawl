@@ -38,7 +38,7 @@
 	{% endfor %}
 	</div>
 	<a class="btn btn-primary" href="{{url_for('docstore.parallel_align', src=entries[0].id, tgt=entries[1].id)}}">Align</a>
-
+	<a class="btn btn-primary" href="{{url_for('docstore.parallel_verify', src=entries[0].id, tgt=entries[1].id)}}">Verify</a>
 
 
 {% endblock %}

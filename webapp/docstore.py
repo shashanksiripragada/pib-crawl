@@ -1,7 +1,7 @@
 import os
 import sys
 sys.path.insert(1, '../')
-from flask import Flask
+from flask import Flask, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask import render_template, request
 from flask_migrate import Migrate
@@ -37,7 +37,6 @@ def entry(id):
     for model in models:
         retrieved = retrieve_neighbours_en(x.id, model=model)
         group[model] = retrieved
-    #if x.neighbors:
     return render_template('entry.html', entry=x, retrieved=group)
 
 @docstore.route('/entry', methods=['GET'])
@@ -127,22 +126,39 @@ def parallel_align():
                             aligned_content = aligned_content)
 
 
+# @docstore.route('/entry2/<id>')
+# def entry2(id):
+#     x =  M.Entry.query.get(id)
+#     delta = timedelta(days = 1)
+#     start = x.date - delta
+#     end = x.date + delta 
+#     qry = M.Entry.query.filter(
+#         and_(M.Entry.date <= end, M.Entry.date >= start , M.Entry.lang!=x.lang)).all()
+#     print(len(qry))
+#     lang_list = []
+#     for i in qry:
+#         lang_list.append(i.lang)
+#     _list = Counter(lang_list).keys()
+#     count = Counter(lang_list).values()
+#     print(_list,'\n',count)
+#     return render_template('entry.html', entry=x)
 
-
-
-@docstore.route('/entry2/<id>')
-def entry2(id):
-    x =  M.Entry.query.get(id)
-    delta = timedelta(days = 1)
-    start = x.date - delta
-    end = x.date + delta 
-    qry = M.Entry.query.filter(
-        and_(M.Entry.date <= end, M.Entry.date >= start , M.Entry.lang!=x.lang)).all()
-    print(len(qry))
-    lang_list = []
-    for i in qry:
-        lang_list.append(i.lang)
-    _list = Counter(lang_list).keys()
-    count = Counter(lang_list).values()
-    print(_list,'\n',count)
-    return render_template('entry.html', entry=x)
+@docstore.route('/parallel/verify', methods=['GET', 'POST'])
+def parallel_verify():
+    if request.method == "POST":
+        #print(request.args.get('src'))
+        return "hello, {}".format(request.args.get('src'))
+    else:
+        src = request.args.get('src')
+        tgt = request.args.get('tgt')
+        src_entry =  M.Entry.query.get(src)
+        tgt_entry =  M.Entry.query.get(tgt)
+        def wrap_in_para(text):
+            lines = text.splitlines()
+            wrap = lambda l: '<p>{}</p>'.format(l)
+            lines = list(map(wrap, lines))
+            return '\n'.join(lines)
+        src_entry.content = wrap_in_para(src_entry.content)
+        tgt_entry.content = wrap_in_para(tgt_entry.content) 
+        
+        return render_template('verify.html', entries=[src_entry,tgt_entry])

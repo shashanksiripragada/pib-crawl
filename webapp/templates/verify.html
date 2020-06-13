@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+{% block body %}
+
+{% block content %}
+    <div class="row">
+    {% for entry in entries %}
+        <div class="col-6">
+            <div class="row">
+                <div class="col-6">
+                    <div class="input-group input-group-sm mb-3">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text" id="inputGroup-sizing-sm">id</span>
+                      </div>
+                      <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" value="{{entry.id}}" >
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="input-group input-group-sm mb-3">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text" id="inputGroup-sizing-sm">Date</span>
+                      </div>
+                      <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" value="{{entry.date}}" >
+                    </div>
+                </div>
+            </div>
+
+    <div class="row">
+        <div class="col-12">
+            {{entry.content|safe}} 
+        </div>
+    </div>
+    
+
+    </div>
+        <br/>
+    {% endfor %}
+    </div>
+
+
+    <form role="form" method='POST' action='/parallel/verify'>
+    <div class="form-group">
+      <!-- <input type="submit" value="Add to DB" class="btn btn-primary" id="date-aligned"> -->
+        <a class="btn btn-primary" href="{{url_for('docstore.parallel_verify', src=entries[0].id, tgt=entries[1].id)}}">Verify</a>
+    </div>
+    </form>
+
+
+{% endblock %}
+
+
+{% endblock %}
+
+

@@ -1,0 +1,84 @@
+0 All Ministry
+1 President's Secretariat
+2 Vice President's Secretariat
+3 Prime Minister's Office
+4 Ministry of External Affairs
+5 Ministry of Home Affairs
+6 Ministry of Personnel, Public Grievances & Pensions
+7 Ministry Of Law & Justice
+8 Ministry of Human Resource Development
+9 Ministry of Youth Affairs and Sports
+10 Ministry of Panchayati Raj
+11 Ministry of Information & Broadcasting
+12 Ministry of Parliamentary Affairs
+13 Ministry of Science & Technology
+14 Department of Space
+15 Ministry of Finance
+16 Ministry of Commerce & Industry
+17 Ministry of Culture
+18 Ministry of Steel
+19 Ministry of Textiles
+20 Ministry of Petroleum & Natural Gas
+21 Ministry of Labour & Employment
+23 Ministry of Railways
+24 Ministry of Communications
+25 Ministry of Surface Transport
+26 Ministry of Civil Aviation
+27 Ministry of Agriculture & Farmers Welfare
+28 Ministry of New and Renewable Energy
+30 Ministry of Environment, Forest and Climate Change
+31 Ministry of Health and Family Welfare
+32 Ministry of Urban Development
+33 Ministry of Defence
+34 UPSC
+35 Election Commission
+36 Ministry of Tourism
+37 Special Service and Features
+38 Ministry of  Water Resources, River Development and Ganga Rejuvenation
+39 Ministry of Consumer Affairs, Food & Public Distribution
+40 Ministry of Food Processing Industries
+41 Ministry of Chemicals and Fertilizers
+42 Ministry of Coal
+43 Ministry of Rural Development
+44 Ministry of Mines
+45 Department of Ocean Development
+46 Ministry of Shipping
+47 Ministry of Housing & Urban Affairs
+48 Ministry of Disinvestment
+49 Ministry of Tribal Affairs
+50 Ministry of Social Justice & Empowerment
+51 Ministry of Micro,Small & Medium Enterprises
+52 Ministry of Power
+53 Ministry of Heavy Industries & Public Enterprises
+55 Ministry of Statistics & Programme Implementation
+56 Department of Atomic Energy
+57 Ministry of Development of North-East Region
+58 Ministry of Agro & Rural Industries
+59 Ministry of Overseas Indian Affairs
+60 Ministry of Company Affairs
+61 Cabinet
+62 Cabinet Committee Decisions
+63 Cabinet Committee on Economic Affairs (CCEA)
+64 Ministry of Women and Child Development
+65 Ministry of Minority Affairs
+66 Ministry of Corporate Affairs
+67 Ministry of Earth Science
+68 Cabinet Secretariat
+69 Ministry of Road Transport & Highways
+70 Cabinet Committee on Infrastructure
+71 Cabinet Committee on Price
+72 Other Cabinet Committees
+73 Ministry of Drinking Water & Sanitation
+74 EAC-PM
+75 Cabinet Committee on Investment
+77 Ministry of Skill Development and Entrepreneurship
+78 NITI Aayog
+79 Ministry of Planning
+80 AYUSH
+1005 Others
+1323 Ministry of Electronics & IT
+1325 PM Speech
+1330 Finance Commission
+1336 Ministry of Jal Shakti
+1340 Ministry of Fisheries, Animal Husbandry & Dairying
+1406 Office of Principal Scientific Advisor to GoI

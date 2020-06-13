@@ -22,35 +22,28 @@ def store_retrieved(model, langs):
             exists = Retrieval.query.filter(and_(Retrieval.query_id==q.parent_id,\
                                          Retrieval.model==model))\
                                          .first()
-            print(exists.retrieved_id, exists.score, exists.model)
-            # if not exists:
-            #     try:
-            #         retrieved = retrieve_neighbours_en(q.parent_id, model)
-            #     except:
-            #         print(q.parent_id,file=error)
-            #         continue
-            #     else:
-            #         retrieved_id = retrieved[0][0]
-            #         score = retrieved[0][1]   
-            #         entry = Retrieval(query_id=q.parent_id, retrieved_id=retrieved_id,\
-            #                           score=score, model=model)
-            #         try:
-            #             db.session.add(entry)
-            #             db.session.commit()
-            #         except:
-            #             print(q.parent_id,file=error)
-            retrieved = retrieve_neighbours_en(q.parent_id, model)
-            retrieved_id = retrieved[0][0]
-            score = retrieved[0][1]
-            print(retrieved_id, score)
+            if not exists:
+                try:
+                    retrieved = retrieve_neighbours_en(q.parent_id, model)
+                except:
+                    print(q.parent_id,file=error)
+                    continue
+                else:
+                    retrieved_id = retrieved[0][0]
+                    score = retrieved[0][1]   
+                    entry = Retrieval(query_id=q.parent_id, retrieved_id=retrieved_id,\
+                                      score=score, model=model)
+                    try:
+                        db.session.add(entry)
+                        db.session.commit()
+                    except:
+                        print(q.parent_id,file=error)
 
 if __name__ == '__main__':
-    #langs = ['hi', 'ta', 'te', 'ml', 'bn', 'gu', 'mr', 'pa', 'or'] #[ur]
-    langs = ['ta']
+    langs = ['hi', 'ta', 'te', 'ml', 'bn', 'gu', 'mr', 'pa', 'or'] #[ur]
     parser=ArgumentParser()
     parser.add_argument('--model', help='retrieval based on model used for tanslation', required=True)
     args = parser.parse_args()
     model = args.model
     error = open('retrieval_error.txt', 'a')
     store_retrieved(model, langs)
-    #duplicate()
