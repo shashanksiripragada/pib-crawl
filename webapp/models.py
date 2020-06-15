@@ -3,6 +3,7 @@ import datetime
 
 class Entry(db.Model):
     __tablename__ = 'entry'
+    __searchable__ = ['content']
     id = db.Column('id', db.Integer, primary_key = True)
     lang = db.Column(db.String(100))
     date = db.Column(db.DateTime, default=datetime.datetime.utcnow, index=True)
@@ -11,7 +12,7 @@ class Entry(db.Model):
     city = db.Column(db.String(100))
     neighbors = db.relationship("Link", primaryjoin="Link.first_id==Entry.id")
     translations = db.relationship("Translation", backref="entry")
-    retrieve = db.relationship("Retrieval",primaryjoin="Retrieval.query_id==Entry.id")
+    retrieve = db.relationship("Retrieval", primaryjoin="Retrieval.query_id==Entry.id")
 
 class Link(db.Model):
     __tablename__ = 'link'
@@ -29,6 +30,8 @@ class Translation(db.Model):
     __table_args__ = (
         db.UniqueConstraint('parent_id', 'model', name='unique_parent_model'),
     )
+
+    __searchable__ = ['translated']
     id = db.Column('id', db.Integer, primary_key = True)
     parent_id = db.Column(db.Integer, db.ForeignKey('entry.id'), nullable=False)
     model = db.Column(db.String(100))
@@ -54,13 +57,19 @@ class Titles(db.Model):
         Lookup table for titles in english and their translations.
     """
     __tablename__ = 'titles'
-    __table_args__ = (
-        db.UniqueConstraint('en_title', 'nonen_title', name='unique_title_translated'),
-    )
     id = db.Column('id', db.Integer, primary_key = True)
     ministry_id = db.Column(db.Integer)
     en_title = db.Column(db.Text)
-    nonen_title = db.Column(db.Text)
+    hi_title = db.Column(db.Text)
+    ta_title = db.Column(db.Text)
+    mr_title = db.Column(db.Text)
+    gu_title = db.Column(db.Text)
+    ur_title = db.Column(db.Text)
+    bn_title = db.Column(db.Text)
+    ml_title = db.Column(db.Text)
+    te_title = db.Column(db.Text)
+    or_title = db.Column(db.Text)
+    pa_title = db.Column(db.Text)
 
 db.create_all()
 
