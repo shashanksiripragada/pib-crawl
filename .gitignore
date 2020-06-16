@@ -12,7 +12,6 @@ webapp/*.db-journal
 *.pyc
 *.db
 *.swp
-migrations/
 cli/extraction/
 text_dump/
 cli/*.txt

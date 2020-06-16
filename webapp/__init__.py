@@ -7,7 +7,8 @@ from sqlalchemy import and_
 from collections import Counter
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///pib-crawled-sqlite.db'
+##app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///pib-crawled-sqlite.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////datasets/lrec-scratch/pib-crawl/webapp/pib-crawled-sqlite.db'
 db = SQLAlchemy(app)
 from . import models as M
 
