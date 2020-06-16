@@ -54,13 +54,19 @@ class Titles(db.Model):
         Lookup table for titles in english and their translations.
     """
     __tablename__ = 'titles'
-    __table_args__ = (
-        db.UniqueConstraint('en_title', 'nonen_title', name='unique_title_translated'),
-    )
     id = db.Column('id', db.Integer, primary_key = True)
     ministry_id = db.Column(db.Integer)
     en_title = db.Column(db.Text)
-    nonen_title = db.Column(db.Text)
+    hi_title = db.Column(db.Text)
+    ta_title = db.Column(db.Text)
+    mr_title = db.Column(db.Text)
+    gu_title = db.Column(db.Text)
+    ur_title = db.Column(db.Text)
+    bn_title = db.Column(db.Text)
+    ml_title = db.Column(db.Text)
+    te_title = db.Column(db.Text)
+    or_title = db.Column(db.Text)
+    pa_title = db.Column(db.Text)
 
 db.create_all()
 
