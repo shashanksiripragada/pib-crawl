@@ -59,7 +59,15 @@ class Titles(db.Model):
     en_title = db.Column(db.Text)
     hi_title = db.Column(db.Text)
     ta_title = db.Column(db.Text)
-    
+    mr_title = db.Column(db.Text)
+    gu_title = db.Column(db.Text)
+    ur_title = db.Column(db.Text)
+    bn_title = db.Column(db.Text)
+    ml_title = db.Column(db.Text)
+    te_title = db.Column(db.Text)
+    or_title = db.Column(db.Text)
+    pa_title = db.Column(db.Text)
+
 db.create_all()
 
 
