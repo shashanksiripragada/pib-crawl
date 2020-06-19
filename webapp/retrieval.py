@@ -13,7 +13,7 @@ from tqdm import tqdm
 from bleualign.align import Aligner
 import os
 from ilmulti.utils.language_utils import inject_token
-from ilmulti.sentencepiece import SentencePieceTokenizer
+from ilmulti.sentencepiece import build_tokenizer
 import csv
 from sklearn.metrics.pairwise import cosine_similarity
 from collections import namedtuple
@@ -25,7 +25,7 @@ from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.stem import PorterStemmer
 
-tokenizer = SentencePieceTokenizer()
+tokenizer = build_tokenizer('ilmulti-v0')
 
 def detok(src_out):
     src = []

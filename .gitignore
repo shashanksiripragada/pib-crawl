@@ -23,3 +23,8 @@ retrieval_error.txt
 translate_error.txt
 cli/train.en-*
 titles/
+
+env/
+
+*.tar.gz
+*.sqlite

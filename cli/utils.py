@@ -5,7 +5,6 @@ from ilmulti.segment import SimpleSegmenter, Segmenter
 from ilmulti.sentencepiece import SentencePieceTokenizer
 from collections import defaultdict
 from copy import deepcopy
-from urduhack.tokenization import sentence_tokenizer
 
 class Batch:
     def __init__(self, uids, lines, state):
@@ -115,6 +114,7 @@ class Preproc:
 
     def process(self, content, lang):
         if lang == 'ur':
+            from urduhack.tokenization import sentence_tokenizer
             lang, segments = sentence_tokenizer(content)
             tokenized, _io = self.create_stringio(segments, lang)
             return tokenized, _io
