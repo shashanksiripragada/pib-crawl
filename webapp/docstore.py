@@ -11,21 +11,15 @@ from collections import Counter, defaultdict
 from . import models as M
 from . import db
 from ilmulti.segment import SimpleSegmenter, Segmenter
-from ilmulti.sentencepiece import SentencePieceTokenizer
-from ilmulti.translator.pretrained import mm_all
+from ilmulti.sentencepiece import build_tokenizer
 from tools.align import BLEUAligner
-from cli import ILMULTI_DIR
-from cli.utils import Preproc
 
 segmenter = Segmenter()
-root = os.path.join(ILMULTI_DIR, 'mm-all')
-translator = mm_all(root=root, use_cuda=True).get_translator()
-tokenizer = SentencePieceTokenizer()
-aligner = BLEUAligner(translator, tokenizer, segmenter)
-preproc = Preproc(segmenter, tokenizer)
+tokenizer = build_tokenizer('ilmulti-v0')
 
 from flask import Blueprint
 from .retrieval import retrieve_neighbours_en 
+
 docstore = Blueprint('docstore', __name__, template_folder='templates')
 
 @docstore.route('/')
@@ -83,6 +77,7 @@ def parallel_align():
     src_entry =  M.Entry.query.get(src)
     tgt_entry =  M.Entry.query.get(tgt)
 
+    aligner = get_aligner()
     translation, alignments = aligner(src_entry.content, src_entry.lang, 
         tgt_entry.content, tgt_entry.lang, galechurch=(str(galechurch)=='True'))
     src_toks, hyp_toks = translation
@@ -126,27 +121,9 @@ def parallel_align():
                             aligned_content = aligned_content)
 
 
-# @docstore.route('/entry2/<id>')
-# def entry2(id):
-#     x =  M.Entry.query.get(id)
-#     delta = timedelta(days = 1)
-#     start = x.date - delta
-#     end = x.date + delta 
-#     qry = M.Entry.query.filter(
-#         and_(M.Entry.date <= end, M.Entry.date >= start , M.Entry.lang!=x.lang)).all()
-#     print(len(qry))
-#     lang_list = []
-#     for i in qry:
-#         lang_list.append(i.lang)
-#     _list = Counter(lang_list).keys()
-#     count = Counter(lang_list).values()
-#     print(_list,'\n',count)
-#     return render_template('entry.html', entry=x)
-
 @docstore.route('/parallel/verify', methods=['GET', 'POST'])
 def parallel_verify():
     if request.method == "POST":
-        #print(request.args.get('src'))
         return "hello, {}".format(request.args.get('src'))
     else:
         src = request.args.get('src')

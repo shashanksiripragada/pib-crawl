@@ -3,5 +3,5 @@ flask_migrate
 flask_sqlalchemy
 Urduhack
 git+https://github.com/rsennrich/Bleualign
-git+https://github.com/jerinphilip/ilmulti.git@pib
-git+https://github.com/jerinphilip/fairseq-ilmt.git@pib
+#git+https://github.com/jerinphilip/ilmulti.git@pib
+#git+https://github.com/jerinphilip/fairseq-ilmt.git@pib
