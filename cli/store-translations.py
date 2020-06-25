@@ -76,16 +76,18 @@ def translate(segmenter, tokenizer, translator, max_tokens, model, langs, tgt_la
 
 if __name__ == '__main__':
     langs = ['hi', 'ta', 'te', 'ml', 'bn', 'gu', 'mr', 'pa', 'or'] #[ur]
-    segmenter = Segmenter()
-    tokenizer = SentencePieceTokenizer()
-    root = os.path.join(ILMULTI_DIR, 'mm-all')
-    translator = mm_all(root=root, use_cuda=True).get_translator()
-
     parser=ArgumentParser()
     parser.add_argument('--max_tokens', type=int, help='max_tokens in each batch', required=True)
     parser.add_argument('--model', help='model used to translate', required=True)
     parser.add_argument('--tgt_lang', help='target lang to translate to', required=True)
     parser.add_argument('--rebuild', help='restore the tranlsation items', action='store_true')
     args = parser.parse_args()
+    
+    segmenter = Segmenter()
+    tokenizer = SentencePieceTokenizer()
+    model = args.model
+    root = os.path.join(ILMULTI_DIR, 'mm-all')
+    translator = mm_all(root=root, model=model, use_cuda=True).get_translator()
+
     translate(segmenter, tokenizer, translator, args.max_tokens,\
              args.model, langs, args.tgt_lang, args.rebuild)

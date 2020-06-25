@@ -20,14 +20,6 @@ from urduhack.tokenization import sentence_tokenizer
 from cli import ILMULTI_DIR
 langs = ['hi', 'ta', 'te', 'ml', 'ur', 'bn', 'gu', 'mr', 'pa', 'or']
 
-segmenter = Segmenter()
-tokenizer = SentencePieceTokenizer()
-root = os.path.join(ILMULTI_DIR, 'mm-all')
-translator = mm_all(root=root, use_cuda=True).get_translator()
-aligner = BLEUAligner(translator, tokenizer, segmenter)
-preproc = Preproc(segmenter, tokenizer)
-
-
 def get_datelinks(entry):
     links = []
     date_links = entry.neighbors
@@ -115,13 +107,17 @@ if __name__ == '__main__':
     parser.add_argument('tgt_lang', help='english is the target language')
     args = parser.parse_args()
     src_lang, tgt_lang = args.src_lang, args.tgt_lang
-    #fpath = os.getcwd()
-    #fname = 'pib_{}-{}'.format(tgt_lang, src_lang)
-    #pwriter = ParallelWriter(fpath, fname)
-    model = 'mm_all_iter1'
+
+    segmenter = Segmenter()
+    tokenizer = SentencePieceTokenizer()
+    root = os.path.join(ILMULTI_DIR, 'mm-all')
+    model='mm_all_iter0'
+    translator = mm_all(root=root, model=model, use_cuda=True).get_translator()
+    aligner = BLEUAligner(translator, tokenizer, segmenter)
+    preproc = Preproc(segmenter, tokenizer)
+
     src_file = open('pib_{}_en-{}.{}.txt'.format(model, src_lang, src_lang),'a')
-    tgt_file = open('pib_{}_en-{}.{}.txt'.format(model, src_lang, tgt_lang),'a')
-    
+    tgt_file = open('pib_{}_en-{}.{}.txt'.format(model, src_lang, tgt_lang),'a')    
     export(src_lang, tgt_lang, model)
 
 

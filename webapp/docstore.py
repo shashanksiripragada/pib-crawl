@@ -19,7 +19,8 @@ from cli.utils import Preproc
 
 segmenter = Segmenter()
 root = os.path.join(ILMULTI_DIR, 'mm-all')
-translator = mm_all(root=root, use_cuda=True).get_translator()
+model='mm_all_iter0'
+translator = mm_all(root=root, model=model, use_cuda=True).get_translator()
 tokenizer = SentencePieceTokenizer()
 aligner = BLEUAligner(translator, tokenizer, segmenter)
 preproc = Preproc(segmenter, tokenizer)
