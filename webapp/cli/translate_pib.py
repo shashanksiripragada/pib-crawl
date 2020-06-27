@@ -8,8 +8,8 @@ from ilmulti.translator import from_pretrained
 from sqlalchemy import or_, and_
 
 # Internal imports.
-from ..webapp import db
-from ..webapp.models import Entry, Link, Translation
+from .. import db
+from ..models import Entry, Link, Translation
 from .utils import BatchBuilder
 
 def translate(engine, max_tokens, model, langs, tgt_lang = 'en', force_rebuild=False):     
@@ -51,18 +51,19 @@ def translate(engine, max_tokens, model, langs, tgt_lang = 'en', force_rebuild=F
             # Collect
             hyps = [ gout['tgt'] for gout in generation_output ]
             ids = [ gout['id'] for gout in generation_output ]
-            mapping = defaultdict(list)
-            for uid in batch.uids:
-                uid = uid.split()
-                idx, line_num = int(uid[0]), int(uid[1])
-                mapping[idx].append(line_num)
+            collector = defaultdict(list)
+            for uid, hyp in zip(batch.uids, hyps):
+                idx, line_num = uid.split()
+                line_num = int(line_num)
+                collector[idx].append((line_num, hyp))
 
-            start = 0 
-            for entry_id in mapping:
-                num_lines = len(mapping[entry_id])
-                translated = hyps[start:start+num_lines]
-                translated = '\n'.join(translated)
-                start = num_lines
+            for idx in collector:
+                sorted_lines = sorted(collector[idx])
+                line_numbers, ordered_lines = list(zip(*sorted_lines))
+                translated = '\n'.join(ordered_lines)
+
+                entry_id = int(idx)
+
                 translation = (
                     Translation.query.filter(
                         and_(
@@ -71,12 +72,19 @@ def translate(engine, max_tokens, model, langs, tgt_lang = 'en', force_rebuild=F
                         )
                     ).first()
                 )
+
+                # Converting entry_id to Integer.
+                # This can silently fail.
                 
                 def modify_entry(entry):
                     db.session.add(entry)
                     db.session.commit()
 
                 if translation is not None:
+                    if translation.translated != translated:
+                        print(idx)
+                    else:
+                        print("Same Translation as before.")
                     translation.translated = translated
                     modify_entry(translation)
 
