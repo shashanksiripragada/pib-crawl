@@ -12,6 +12,7 @@ from . import db
 from ilmulti.segment import SimpleSegmenter, Segmenter
 from ilmulti.sentencepiece import build_tokenizer
 from tools.align import BLEUAligner
+from .utils import split_and_wrap_in_p
 
 segmenter = Segmenter()
 tokenizer = build_tokenizer('ilmulti-v0')
@@ -63,10 +64,10 @@ def listing():
 @docstore.route('/parallel')
 def parallel():
     def process(key):
-        param = request.arg.get(key)
-        entry = M.entry.query.get(param)
-        content = split_and_wrap_in_p(entry.content)
-        return content
+        param = request.args.get(key)
+        entry = M.Entry.query.get(param)
+        entry.content = split_and_wrap_in_p(entry.content)
+        return entry
 
     entries = list(map(process, ['src', 'tgt']))
     return render_template('parallel.html', entries=entries)

@@ -1,14 +1,11 @@
 import os
 from io import StringIO
 from ilmulti.utils.language_utils import inject_token
-from ilmulti.segment import SimpleSegmenter, Segmenter
-from ilmulti.sentencepiece import SentencePieceTokenizer
 from collections import defaultdict
 from copy import deepcopy
 
 class Batch:
     def __init__(self, uids, lines, state):
-        #self.uids = uids
         self.uids = uids
         self.lines = lines
         self.target = None
@@ -97,10 +94,6 @@ class BatchBuilder:
         return Batch(uids, lines, state)
 
 
-'''
-def collect(batches):
-    list of entries, ready to be written
-'''      
 class Preproc:
     def __init__(self, segmenter, tokenizer):
         self.segmenter = segmenter
