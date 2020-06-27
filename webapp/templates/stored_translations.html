@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+{% block body %}
+{% block content %}
+    <h4>Raw Articles</h4>
+    <div class="row">
+
+        <div class="col-6">
+            <div class="row">
+                <div class="col-6">
+                    <div class="input-group input-group-sm mb-3">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text" id="inputGroup-sizing-sm">id</span>
+                      </div>
+                      <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" value="{{entry.id}}" >
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="input-group input-group-sm mb-3">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text" id="inputGroup-sizing-sm">Date</span>
+                      </div>
+                      <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" value="{{entry.date}}" >
+                    </div>
+                </div>
+            </div>
+
+     <div class="row">
+        <div class="col-12">
+            {{entry.content|safe}} 
+        </div>
+    </div>
+    </div>
+    
+    {% for translation in translations %}
+        <h3>{{translation.model}}</h3>
+        <div class="row">
+            <div class="col-6">
+                {{ translation.translated | safe }}
+            </div>
+        </div>
+    {% endfor %}
+
+{% endblock %}
+{% endblock %}
