@@ -54,7 +54,6 @@ def translate(engine, max_tokens, model, langs, tgt_lang = 'en', force_rebuild=F
             collector = defaultdict(list)
             for id, hyp in zip(hyp_ids, hyps):
                 uid = batch.uids[id]
-                print(id, uid)
                 idx, line_num = uid.split()
                 line_num = int(line_num)
                 collector[idx].append((line_num, hyp))
