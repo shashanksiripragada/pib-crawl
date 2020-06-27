@@ -13,7 +13,6 @@ from tqdm import tqdm
 from bleualign.align import Aligner
 import os
 from ilmulti.utils.language_utils import inject_token
-from ilmulti.sentencepiece import build_tokenizer
 import csv
 from sklearn.metrics.pairwise import cosine_similarity
 from collections import namedtuple
@@ -25,8 +24,6 @@ from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.stem import PorterStemmer
 from .utils import detok
-
-tokenizer = build_tokenizer('ilmulti-v0')
 
 
 def preprocess(corpus):
@@ -92,13 +89,13 @@ def get_candidates(query_id, days):
 
 
 
-def retrieve_neighbours_en(query_id, model='mm_toEN_iter1'):
+def retrieve_neighbours_en(query_id, tokenizer, model='mm_toEN_iter1'):
     candidates = get_candidates(query_id, 2)
     candidate_corpus = []
     query = Translation.query.filter(and_(Translation.parent_id == query_id, \
                                           Translation.model==model)).first()
     query_content = query.translated.splitlines()
-    query_content = detok(query_content)    
+    query_content = detok(tokenizer, query_content)    
     query_content = '\n'.join(query_content)
 
     query_content = preprocess(query_content)
