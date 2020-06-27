@@ -9,3 +9,8 @@ def get_translator():
 def get_aligner():
     aligner = BLEUAligner(translator, tokenizer, segmenter)
     return aligner
+
+def get_tokenizer():
+    from ilmulti.sentencepiece import build_tokenizer
+    tokenizer = build_tokenizer()
+
