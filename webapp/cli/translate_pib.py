@@ -50,9 +50,11 @@ def translate(engine, max_tokens, model, langs, tgt_lang = 'en', force_rebuild=F
 
             # Collect
             hyps = [ gout['tgt'] for gout in generation_output ]
-            ids = [ gout['id'] for gout in generation_output ]
+            hyp_ids = [ gout['id'] for gout in generation_output ]
             collector = defaultdict(list)
-            for uid, hyp in zip(batch.uids, hyps):
+            for id, hyp in zip(hyp_ids, hyps):
+                uid = batch.uids[id]
+                print(id, uid)
                 idx, line_num = uid.split()
                 line_num = int(line_num)
                 collector[idx].append((line_num, hyp))
@@ -76,29 +78,25 @@ def translate(engine, max_tokens, model, langs, tgt_lang = 'en', force_rebuild=F
                 # Converting entry_id to Integer.
                 # This can silently fail.
                 
-                def modify_entry(entry):
+                def modify_translation(entry):
                     db.session.add(entry)
                     db.session.commit()
 
                 if translation is not None:
-                    if translation.translated != translated:
-                        print(idx)
-                    else:
-                        print("Same Translation as before.")
                     translation.translated = translated
-                    modify_entry(translation)
+                    modify_translation(translation)
 
                 else:
                     entry = Translation(
                         parent_id=entry_id, model=model,
                         lang=tgt_lang, translated=translated
                     )            
-                    modify_entry(entry)
+                    modify_translation(entry)
 
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--max_tokens', type=int, help='max_tokens in each batch', required=True)
+    parser.add_argument('--max-tokens', type=int, help='max tokens in each batch', required=True)
     parser.add_argument('--model', help='model used to translate', required=True)
     parser.add_argument('--tgt-lang', help='target lang to translate to', required=True)
     parser.add_argument('--force-rebuild', help='restore the tranlsation items', action='store_true')
