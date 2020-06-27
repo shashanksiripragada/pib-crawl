@@ -23,11 +23,16 @@ class BLEUAligner:
 
         def process(content, lang):
             lang, segments = self.segmenter(content, lang=lang)
-            tokenized, _io = create_stringio(segments, lang)
-            return tokenized, _io
+            missing_idxs = []
+            for idx, segment in enumerate(segments):
+                if not segment.strip():
+                    missing_idxs.append(idx)
 
-        src_tokenized, src_io = process(src, src_lang)
-        tgt_tokenized, tgt_io = process(tgt, tgt_lang)
+            tokenized, _io = create_stringio(segments, lang)
+            return tokenized, _io, missing_idxs
+
+        src_tokenized, src_io, missing_idxs = process(src, src_lang)
+        tgt_tokenized, tgt_io, _ = process(tgt, tgt_lang)
         
         print('using galechurch:', galechurch)
         if galechurch==True:
@@ -35,10 +40,15 @@ class BLEUAligner:
             return ([], []) , (src, tgt)
 
         # Inject tokens into src_tokenized
-        injected_src_tokenized = inject_token(src_tokenized,tgt_lang)
+        injected_src_tokenized = inject_token(src_tokenized, tgt_lang)
 
         generation_output = self.model(injected_src_tokenized)
         hyps = [ gout['tgt'] for gout in generation_output ]
+
+        # Remove missing idxs.
+        for idx in missing_idxs:
+            hyps[idx] = ''
+
         hyp_io = StringIO('\n'.join(hyps))
 
         src, tgt = self.bleu_align(src_io, tgt_io, hyp_io)
