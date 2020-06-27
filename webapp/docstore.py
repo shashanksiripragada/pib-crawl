@@ -1,17 +1,19 @@
 import os
 import sys
+
+from datetime import datetime, timedelta 
+from collections import Counter, defaultdict
+
 from flask import Flask, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask import render_template, request
 from flask_migrate import Migrate
-from datetime import datetime, timedelta 
+from flask import Blueprint
 from sqlalchemy import and_
-from collections import Counter, defaultdict
 from . import models as M
 from . import db
-from .utils import split_and_wrap_in_p
-from flask import Blueprint
 from .retrieval import retrieve_neighbours_en 
+from .utils import split_and_wrap_in_p, clean_translation, detok
 
 from ilmulti.translator import from_pretrained
 from tools.align import BLEUAligner
@@ -94,7 +96,6 @@ def parallel_align():
 
     src_toks, hyp_toks = translation
     
-    from .utils import detok
 
     def process(src_out, tgt_out):
         src = detok(op_model.tokenizer, src_out)
@@ -121,9 +122,7 @@ def parallel_align():
     )
 
     if query:
-        lines = query.translated.splitlines()
-        detokenized = detok(op_model.tokenizer, lines)
-        translated_text = '\n'.join(detokenized)
+        translated_text = clean_translation(op_model.tokenizer, query)
 
     stored_translation = translated_text if query else ''
     stored_translation = split_and_wrap_in_p(stored_translation)
@@ -144,6 +143,20 @@ def parallel_align():
             stored_translation=stored_translation
     )
 
+@docstore.route('/stored-translations/<entry_id>')
+def stored_translations(entry_id):
+    entry =  M.Entry.query.get(entry_id)
+    translations = (
+        M.Translation.query.filter(
+            M.Translation.parent_id == entry_id, 
+        ).all()
+    )
+
+    for translation in translations:
+        cleaned = clean_translation(op_model.tokenizer, translation)
+        translation.translated = split_and_wrap_in_p(cleaned)
+
+    return render_template('stored_translations.html', entry=entry, translations=translations)
 
 @docstore.route('/parallel/verify', methods=['GET', 'POST'])
 def parallel_verify():
