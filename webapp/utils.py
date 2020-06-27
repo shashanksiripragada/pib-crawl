@@ -1,8 +1,7 @@
 from .lazy_load import get_tokenizer
 
-def detok(src_out):
+def detok(tokenizer, src_out):
     src = []
-    tokenizer = get_tokenizer()
     for line in src_out:
         src_detok = tokenizer.detokenize(line)
         src.append(src_detok)

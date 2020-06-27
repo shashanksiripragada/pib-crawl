@@ -9,16 +9,18 @@ from sqlalchemy import and_
 from collections import Counter, defaultdict
 from . import models as M
 from . import db
-from ilmulti.segment import SimpleSegmenter, Segmenter
-from ilmulti.sentencepiece import build_tokenizer
-from tools.align import BLEUAligner
 from .utils import split_and_wrap_in_p
-
-segmenter = Segmenter()
-tokenizer = build_tokenizer('ilmulti-v0')
-
 from flask import Blueprint
 from .retrieval import retrieve_neighbours_en 
+
+from ilmulti.translator import from_pretrained
+from tools.align import BLEUAligner
+
+op_model = from_pretrained(tag='mm-to-en-iter1')
+aligner = BLEUAligner(
+    op_model.translator, op_model.tokenizer,
+    op_model.segmenter
+)
 
 docstore = Blueprint('docstore', __name__, template_folder='templates')
 
@@ -33,7 +35,7 @@ def entry(id):
     group = defaultdict(list)
 
     for model in models:
-        retrieved = retrieve_neighbours_en(x.id, model=model)
+        retrieved = retrieve_neighbours_en(x.id, op_model.tokenizer, model=model)
         group[model] = retrieved
 
     return render_template('entry.html', entry=x, retrieved=group)
@@ -78,11 +80,12 @@ def parallel_align():
     src = request.args.get('src')
     tgt = request.args.get('tgt')
     galechurch = request.args.get('galechurch', 'False')
+    model = request.args.get('model', 'mm_toEN_iter1')
 
     src_entry =  M.Entry.query.get(src)
     tgt_entry =  M.Entry.query.get(tgt)
 
-    aligner = get_aligner()
+
     translation, alignments = aligner(
         src_entry.content, src_entry.lang, 
         tgt_entry.content, tgt_entry.lang, 
@@ -94,8 +97,8 @@ def parallel_align():
     from .utils import detok
 
     def process(src_out, tgt_out):
-        src = detok(src_out)
-        tgt = detok(tgt_out)
+        src = detok(op_model.tokenizer, src_out)
+        tgt = detok(op_model.tokenizer, tgt_out)
         def wrap_pairwise(src, tgt):
             def create_individual(pair):
                 src_line, tgt_line = pair
@@ -108,8 +111,22 @@ def parallel_align():
         content = wrap_pairwise(src, tgt)
         return content
 
-    #src_entry.content = '\n'.join(src)
-    #tgt_entry.content = '\n'.join(tgt)
+    query = (
+        M.Translation.query.filter(
+            and_(
+                M.Translation.parent_id == src, 
+                M.Translation.model == model
+            )
+        ).first()
+    )
+
+    if query:
+        lines = query.translated.splitlines()
+        detokenized = detok(op_model.tokenizer, lines)
+        translated_text = '\n'.join(detokenized)
+
+    stored_translation = translated_text if query else ''
+    stored_translation = split_and_wrap_in_p(stored_translation)
 
     translation_content = process(src_toks, hyp_toks)
     src_out, tgt_out = alignments
@@ -118,9 +135,14 @@ def parallel_align():
     src_entry.content = split_and_wrap_in_p(src_entry.content)
     tgt_entry.content = split_and_wrap_in_p(tgt_entry.content) 
 
-    return render_template('parallel_translate.html', entries=[src_entry,tgt_entry],
-                            translation_content=translation_content, 
-                            aligned_content = aligned_content)
+
+    return render_template(
+            'parallel_translate.html', 
+            entries=[src_entry,tgt_entry], 
+            translation_content=translation_content, 
+            aligned_content=aligned_content,
+            stored_translation=stored_translation
+    )
 
 
 @docstore.route('/parallel/verify', methods=['GET', 'POST'])
