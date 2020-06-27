@@ -64,6 +64,7 @@ def translate(engine, max_tokens, model, langs, tgt_lang = 'en', force_rebuild=F
                 translated = '\n'.join(ordered_lines)
 
                 entry_id = int(idx)
+                print("Entry id: ", entry_id)
 
                 translation = (
                     Translation.query.filter(
