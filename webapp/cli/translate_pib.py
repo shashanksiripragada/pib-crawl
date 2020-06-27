@@ -1,17 +1,16 @@
 import os
 import sys
-
-from webapp import db
-from webapp.models import Entry, Link, Translation
-from sqlalchemy import and_
-
 from tqdm import tqdm
 from argparse import ArgumentParser
-from .utils import BatchBuilder
-from sqlalchemy import or_, and_
 from collections import defaultdict
 from ilmulti.translator import from_pretrained
 
+from sqlalchemy import or_, and_
+
+# Internal imports.
+from ..webapp import db
+from ..webapp.models import Entry, Link, Translation
+from .utils import BatchBuilder
 
 def translate(engine, max_tokens, model, langs, tgt_lang = 'en', force_rebuild=False):     
     segmenter = engine.segmenter
@@ -44,7 +43,6 @@ def translate(engine, max_tokens, model, langs, tgt_lang = 'en', force_rebuild=F
     with tqdm(total=len(entries)) as pbar:
         for batch in batches:
             pbar.update(n=batch.state['epb'])
-            # print(batch.state['epb'])
             pbar.set_postfix(batch.state)
 
             # Translate
@@ -91,13 +89,19 @@ def translate(engine, max_tokens, model, langs, tgt_lang = 'en', force_rebuild=F
 
 
 if __name__ == '__main__':
-    langs = ['hi', 'ta', 'te', 'ml', 'bn', 'gu', 'mr', 'pa', 'or'] 
-
-    parser=ArgumentParser()
+    parser = ArgumentParser()
     parser.add_argument('--max_tokens', type=int, help='max_tokens in each batch', required=True)
     parser.add_argument('--model', help='model used to translate', required=True)
     parser.add_argument('--tgt-lang', help='target lang to translate to', required=True)
     parser.add_argument('--force-rebuild', help='restore the tranlsation items', action='store_true')
+
     args = parser.parse_args()
+
     engine = from_pretrained(tag=args.model)
-    translate(engine, args.max_tokens, args.model, langs, args.tgt_lang, args.force_rebuild)
+    langs = ['hi', 'ta', 'te', 'ml', 'bn', 'gu', 'mr', 'pa', 'or'] 
+
+    translate(
+        engine, args.max_tokens, 
+        args.model, langs, args.tgt_lang,
+        args.force_rebuild
+    )
