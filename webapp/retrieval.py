@@ -24,15 +24,10 @@ import re
 from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.stem import PorterStemmer
+from .utils import detok
 
 tokenizer = build_tokenizer('ilmulti-v0')
 
-def detok(src_out):
-    src = []
-    for line in src_out:
-        src_detok = tokenizer.detokenize(line)
-        src.append(src_detok)
-    return src
 
 def preprocess(corpus):
     # takes in document content and returns processed document as string
