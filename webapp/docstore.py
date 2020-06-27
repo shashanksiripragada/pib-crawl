@@ -18,7 +18,7 @@ from .utils import split_and_wrap_in_p, clean_translation, detok
 from ilmulti.translator import from_pretrained
 from tools.align import BLEUAligner
 
-op_model = from_pretrained(tag='mm-to-en-iter1')
+op_model = from_pretrained(tag='mm-to-en-iter1', use_cuda=True)
 aligner = BLEUAligner(
     op_model.translator, op_model.tokenizer,
     op_model.segmenter
@@ -82,7 +82,7 @@ def parallel_align():
     src = request.args.get('src')
     tgt = request.args.get('tgt')
     galechurch = request.args.get('galechurch', 'False')
-    model = request.args.get('model', 'mm_toEN_iter1')
+    model = request.args.get('model', 'mm-to-en-iter1')
 
     src_entry =  M.Entry.query.get(src)
     tgt_entry =  M.Entry.query.get(tgt)

@@ -3,7 +3,6 @@
 {% block content %}
     <h4>Raw Articles</h4>
     <div class="row">
-
         <div class="col-6">
             <div class="row">
                 <div class="col-6">
@@ -23,19 +22,20 @@
                     </div>
                 </div>
             </div>
-
-     <div class="row">
-        <div class="col-12">
-            {{entry.content|safe}} 
+         <div class="row">
+            <div class="col-12">
+                {{entry.content|safe}} 
+            </div>
         </div>
-    </div>
     </div>
     
     {% for translation in translations %}
-        <h3>{{translation.model}}</h3>
         <div class="row">
             <div class="col-6">
+                <h3>{{translation.model}}</h3>
+                <div class="translation">
                 {{ translation.translated | safe }}
+                </div>
             </div>
         </div>
     {% endfor %}

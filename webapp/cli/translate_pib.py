@@ -64,6 +64,7 @@ def translate(engine, max_tokens, model, langs, tgt_lang = 'en', force_rebuild=F
                 translated = '\n'.join(ordered_lines)
 
                 entry_id = int(idx)
+                print("Entry id: ", entry_id)
 
                 translation = (
                     Translation.query.filter(
@@ -82,6 +83,8 @@ def translate(engine, max_tokens, model, langs, tgt_lang = 'en', force_rebuild=F
                     db.session.commit()
 
                 if translation is not None:
+                    if translated != translation.translated:
+                        print(entry_id, "Different translations!")
                     translation.translated = translated
                     modify_translation(translation)
 
@@ -99,10 +102,11 @@ if __name__ == '__main__':
     parser.add_argument('--model', help='model used to translate', required=True)
     parser.add_argument('--tgt-lang', help='target lang to translate to', required=True)
     parser.add_argument('--force-rebuild', help='restore the tranlsation items', action='store_true')
+    parser.add_argument('--use-cuda', help='use available GPUs', action='store_true')
 
     args = parser.parse_args()
 
-    engine = from_pretrained(tag=args.model)
+    engine = from_pretrained(tag=args.model, use_cuda=args.use_cuda)
     langs = ['hi', 'ta', 'te', 'ml', 'bn', 'gu', 'mr', 'pa', 'or'] 
 
     translate(
