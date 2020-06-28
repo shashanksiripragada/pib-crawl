@@ -1,44 +1,58 @@
 {% extends "layout.html" %}
 {% block body %}
 {% block content %}
-    <h4>Raw Articles</h4>
-    <div class="row">
-        <div class="col-6">
-            <div class="row">
-                <div class="col-6">
-                    <div class="input-group input-group-sm mb-3">
-                      <div class="input-group-prepend">
-                        <span class="input-group-text" id="inputGroup-sizing-sm">id</span>
-                      </div>
-                      <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" value="{{entry.id}}" >
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="input-group input-group-sm mb-3">
-                      <div class="input-group-prepend">
-                        <span class="input-group-text" id="inputGroup-sizing-sm">Date</span>
-                      </div>
-                      <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" value="{{entry.date}}" >
-                    </div>
-                </div>
-            </div>
-         <div class="row">
-            <div class="col-12">
-                {{entry.content|safe}} 
-            </div>
-        </div>
-    </div>
-    
-    {% for translation in translations %}
-        <div class="row">
-            <div class="col-6">
-                <h3>{{translation.model}}</h3>
-                <div class="translation">
-                {{ translation.translated | safe }}
-                </div>
-            </div>
-        </div>
-    {% endfor %}
+<h4>Raw Articles</h4>
+<div class="row">
+	<div class="col-6">
+		<div class="row">
+			<div class="col-6">
+				<div class="input-group input-group-sm mb-3">
+					<div class="input-group-prepend">
+						<span class="input-group-text" id="inputGroup-sizing-sm">id</span>
+					</div>
+					<input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" value="{{entry.id}}" >
+				</div>
+			</div>
+			<div class="col-6">
+				<div class="input-group input-group-sm mb-3">
+					<div class="input-group-prepend">
+						<span class="input-group-text" id="inputGroup-sizing-sm">Date</span>
+					</div>
+					<input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" value="{{entry.date}}" >
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-12">
+				{{entry.content|safe}} 
+			</div>
+		</div>
+	</div>
+
+	<div class="col-6">
+		<nav>
+			<div class="nav nav-pills nav-fill" id="nav-tab" role="tablist">
+				{% for translation in translations %}
+
+				<a class="nav-item nav-link" id="nav-{{translation.model}}-tab"
+								 data-toggle="tab" href="#nav-{{translation.model}}" role="tab"
+															 aria-controls="nav-{{translation.model}}" aria-selected="false">{{translation.model}}</a>
+
+				{% endfor %}
+			</div>
+		</nav>
+		<div class="tab-content" id="nav-tabContent">
+			{% for translation in translations %}
+			<div class="tab-pane fade" id="nav-{{translation.model}}" role="tabpanel" aria-labelledby="nav-{{translation.model}}-tab">
+				{{ translation.translated | safe }}
+
+			</div>
+			{% endfor %}
+		</div>
+	</div>
+</div>
+
+
 
 {% endblock %}
 {% endblock %}
