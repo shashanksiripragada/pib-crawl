@@ -1,12 +1,10 @@
 {% extends "layout.html" %} {% block body %} 
 <div class="row">	
     <div class="col-6">
-        {{entry.id}} <br/>
-        <code>
-            <pre>
-{{entry.content}}
-            </pre>
-        </code> 
+        <h3> {{entry.id}}  </h3>
+        <div>
+{{entry.content | safe}}
+        </div>
     </div>
 
     <div class="col-6">

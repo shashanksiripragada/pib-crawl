@@ -6,7 +6,7 @@ from webapp.models import Entry, Link, Translation, Retrieval
 from webapp.retrieval import retrieve_neighbours_en
 from sqlalchemy import func, and_
 from argparse import ArgumentParser
-
+from ilmulti.translator import from_pretrained
 
 def store_retrieved(model, langs):    
     
@@ -31,10 +31,13 @@ def store_retrieved(model, langs):
                             Retrieval.model==model
                         )
                     ).first()
-
             if not exists:
                 try:
-                    retrieved = retrieve_neighbours_en(query.parent_id, model)
+                    retrieved = retrieve_neighbours_en(
+                                    query.parent_id, 
+                                    op_model.tokenizer, 
+                                    model=model
+                                )
                 except:
                     print(query.parent_id,file=error)
                     continue
@@ -54,10 +57,11 @@ def store_retrieved(model, langs):
                         print(query.parent_id,file=error)
 
 if __name__ == '__main__':
-    langs = ['hi', 'ta', 'te', 'ml', 'bn', 'gu', 'mr', 'pa', 'or', 'ur']
+    langs = ['hi', 'ta', 'te', 'ml', 'bn', 'gu', 'mr', 'pa', 'or']#, 'ur']
     parser=ArgumentParser()
     parser.add_argument('--model', help='retrieval based on model used for tanslation', required=True)
     args = parser.parse_args()
     model = args.model
+    op_model = from_pretrained(tag=model, use_cuda=True)
     error = open('retrieval_error.txt', 'a')
     store_retrieved(model, langs)
