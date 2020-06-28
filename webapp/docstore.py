@@ -12,7 +12,7 @@ from flask import Blueprint
 from sqlalchemy import and_
 from . import models as M
 from . import db
-from .retrieval import retrieve_neighbours_en 
+from .retrieval import retrieve_neighbours_en, retrieve_neighbours_nonen
 from .utils import split_and_wrap_in_p, clean_translation, detok
 
 from ilmulti.translator import from_pretrained
@@ -32,13 +32,16 @@ def entry(id):
     x =  M.Entry.query.get(id)
 
     # Replace model: str with models table.
-
-    models = ['mm_toEN_iter1', 'mm_all_iter1', 'mm_all_iter0']
+    # models = ['mm-to-en-iter1', 'mm_toEN_iter1', 'mm_all_iter1', 'mm_all_iter0']
+    models = ['mm-to-en-iter1']
     group = defaultdict(list)
 
-    for model in models:
-        retrieved = retrieve_neighbours_en(x.id, op_model.tokenizer, model=model)
-        group[model] = retrieved
+    x.content = split_and_wrap_in_p(x.content)
+
+    if x.lang != 'en':
+        for model in models:
+            retrieved = retrieve_neighbours_en(x.id, op_model.tokenizer, model=model)
+            group[model] = retrieved
 
     return render_template('entry.html', entry=x, retrieved=group)
 

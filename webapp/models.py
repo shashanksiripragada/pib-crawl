@@ -3,6 +3,7 @@ import datetime
 
 class Entry(db.Model):
     __tablename__ = 'entry'
+    __searchable__ = ['content']
     id = db.Column('id', db.Integer, primary_key = True)
     lang = db.Column(db.String(100))
     date = db.Column(db.DateTime, default=datetime.datetime.utcnow, index=True)
@@ -29,6 +30,8 @@ class Translation(db.Model):
     __table_args__ = (
         db.UniqueConstraint('parent_id', 'model', name='unique_parent_model'),
     )
+
+    __searchable__ = ['translated']
     id = db.Column('id', db.Integer, primary_key = True)
     parent_id = db.Column(db.Integer, db.ForeignKey('entry.id'), nullable=False)
     model = db.Column(db.String(100))
