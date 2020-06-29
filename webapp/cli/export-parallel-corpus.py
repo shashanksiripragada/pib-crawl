@@ -18,7 +18,6 @@ from bleualign.align import Aligner
 from cli.utils import Preproc, ParallelWriter
 from tools.align import BLEUAligner
 
-#from urduhack.tokenization import sentence_tokenizer
 from cli import ILMULTI_DIR
 
 def get_datelinks(entry):
@@ -77,11 +76,8 @@ def calculate_threshold(scores):
     mean = np.mean(scores)
     var = np.var(scores)
     std = np.std(scores)
-    plt.hist(scores, bins=10)
-    plt.ylabel('article counts');
-    plt.savefig('./extraction/plots/{}_new.png'.format(src_lang))
-    print(mean,var,std)
-    return mean#std#mean+std
+    threshold = mean
+    return threshold
 
 
 def export(src_lang, tgt_lang, model):
@@ -92,8 +88,8 @@ def export(src_lang, tgt_lang, model):
     entry_list = [entry.id for entry in entries]
     retrieved = Retrieval.query.filter(
                     and_(
-                    Retrieval.query_id.in_(entry_list), 
-                    Retrieval.model==model
+                        Retrieval.query_id.in_(entry_list), 
+                        Retrieval.model==model
                     )
                 ).all()
     scores = [r.score for r in retrieved if r]     
