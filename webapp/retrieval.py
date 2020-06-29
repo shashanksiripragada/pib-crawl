@@ -24,6 +24,7 @@ class SPMPreprocessor:
         self.lang = lang
 
     def __call__(self, content):
+        # print(content, type(content))
         _, content = self.tokenizer(content, lang=self.lang)
         return ' '.join(content)
 
@@ -130,7 +131,6 @@ def retrieve_neighbours_en(query_id, tokenizer, model='mm_toEN_iter1', length_ch
     )
 
     preprocess = SPMPreprocessor(tokenizer, lang='en')
-
     query_content = preprocess(clean_translation(tokenizer, query))
 
     # Candidate content.
@@ -140,6 +140,9 @@ def retrieve_neighbours_en(query_id, tokenizer, model='mm_toEN_iter1', length_ch
 
     candidate_corpus = []
     for content in candidate_content:
+        if content.content is None:
+            print(content, content.content, content.id)
+        content.content = content.content or ''
         processed = preprocess(content.content)
         candidate_corpus.append(processed)
 
