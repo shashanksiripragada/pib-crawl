@@ -9,102 +9,63 @@ common = defaultdict(list)
 
 random.seed(42)
 
-class ParallelWriter:
-    def __init__(self, fpath):
-        self.fpath = fpath
-        self.files = {}
-
-    def get_fp(self, xx, yy):
-
-        if not os.path.exists(fpath):
-            os.makedirs(fpath)
-
-
-        if (xx, yy) in self.files:
-            return self.files[(xx, yy)]
-
-        self.files[(xx, yy)] = [
-            open(os.path.join(fpath, '{}.{}'.format('pib-sampled', xx)), 'w'),
-            open(os.path.join(fpath, '{}.{}'.format('pib-sampled', yy)), 'w')
-        ]
-
-        return self.files[(xx, yy)]
-
-    def write(self, src, tgt, srcline, tgtline):
-        srcfile, tgtfile = self.get_fp(src, tgt)
-        print(srcline, file=srcfile)
-        print(tgtline, file=tgtfile)
-
-
 def get_size(file):
     count = 0
     for line in file:
         count+=1
     return count
 
-def get_random_lines(start, end, num):
-    lines = []
-    return 
-    return lines 
+def get_fp(srcpath, tgtpath):
+    srcfile = open(srcpath, 'r')
+    tgtfile = open(tgtpath, 'r')
+    return srcfile, tgtfile
 
-def get_samples(xx, yy, srcfile, tgtfile, samples):
-    srclist = []
-    tgtlist = []
+def get_sample_pairs(src_lang, tgt_lang, srcpath, tgtpath, nsamples):
+    srcfile, tgtfile = get_fp(srcpath, tgtpath)    
+    srclines = get_size(srcfile)
+    tgtlines = get_size(tgtfile)
+    samples = random.sample(range(0,srclines), nsamples) 
+    
+    srclist, tgtlist = [], []
+    srcfile, tgtfile = get_fp(srcpath, tgtpath)
     for index, (src, tgt) in enumerate(zip(srcfile, tgtfile)):
         if index in samples:
             src = src.strip()
             tgt = tgt.strip()
             srclist.append(src)
             tgtlist.append(tgt)
+    pairs = list(set(zip(srclist, tgtlist)))
+    pairs = pairs[:nsamples]
+    srclist, tgtlist = list(zip(*pairs))
 
     return srclist, tgtlist
-            #pwriter.write(xx, yy, src, tgt)
 
-
-def get_fp(srcpath, tgtpath):
-    srcfile = open(srcpath, 'r')
-    tgtfile = open(tgtpath, 'r')
-    return srcfile, tgtfile
 
 if __name__ == '__main__':
-    #langs = ['hi', 'ta', 'te', 'ml', 'ur', 'bn', 'gu', 'mr', 'pa', 'or']
-    
-    #langs = ['ta']
     parser=ArgumentParser()
-    parser.add_argument('src_lang', help='non-english language')
+    parser.add_argument('--nsamples', help='', default=100, type=int, required=True)
+    parser.add_argument('--src_lang', help='source language, non-english', required=True)
+    parser.add_argument('--tgt_lang', help='target language', required=True )
+    parser.add_argument('--model', help='translation model for generating dataset', required=True)
     args = parser.parse_args()
-    lang = args.src_lang
+    src_lang, tgt_lang = args.src_lang, args.tgt_lang
+    model, nsamples = args.model, args.nsamples
 
-    #for lang in src_lang:
-    try:
-        df = pd.DataFrame()
-        fpath = './'#.format(lang)
-        srcpath = os.path.join(fpath, '{}.{}-{}.{}'.format('train', 'en', lang, 'en'))
-        tgtpath = os.path.join(fpath, '{}.{}-{}.{}'.format('train', 'en', lang, lang))
+    fpath = './{}/{}-{}/'.format(model, src_lang, tgt_lang)
+    srcpath = os.path.join(fpath, 'filtered.{}'.format(src_lang))
+    tgtpath = os.path.join(fpath, 'filtered.{}'.format(tgt_lang))
+  
+    srclist, tgtlist = get_sample_pairs(src_lang, tgt_lang, srcpath, tgtpath, nsamples)
 
-        srcfile, tgtfile = get_fp(srcpath, tgtpath)    
-        srclines = get_size(srcfile)
-        tgtlines = get_size(tgtfile)
-        samples = random.sample(range(0,srclines), 100)
-        
-        #pwriter = ParallelWriter(fpath)
-        srcfile, tgtfile = get_fp(srcpath, tgtpath)   
-        srclist, tgtlist = get_samples('en', lang, srcfile, tgtfile, samples)
+    df = pd.DataFrame()
+    df['score'] = np.ones(len(srclist)).tolist()
+    df['{}'.format(src_lang)] = srclist
+    df['{}'.format(tgt_lang)] = tgtlist
 
-        pairs = list(set(zip(srclist, tgtlist)))
+    export_path = './{}/'.format(model)
+    csvpath = os.path.join(export_path, '{}-{}.xlsx'.format(src_lang, tgt_lang))
+    df.to_excel(csvpath, index=False)
 
-        pairs = pairs[:100]
-        srclist, tgtlist = list(zip(*pairs))
-
-        df['score'] = np.ones(len(srclist)).tolist()
-        df['en'] = srclist
-        df['{}'.format(lang)] = tgtlist
-
-        csvpath = os.path.join(fpath, 'en-{}.xlsx'.format(lang))
-        df.to_excel(csvpath, index=False)
-    except Exception as e:
-        print(lang, e)
-        pass
 
 
  

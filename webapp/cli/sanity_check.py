@@ -5,10 +5,11 @@ from argparse import ArgumentParser
 from sqlalchemy import and_, or_
 from pprint import pprint
 
-from ilmulti.segment import Segmenter
+from ilmulti.translator import from_pretrained
 
 from webapp.models import Entry, Link, Translation, Retrieval, Titles
 from webapp.retrieval import *
+
 
 def get_datelinks(entry, lang='en'):
     links = []
@@ -19,13 +20,17 @@ def get_datelinks(entry, lang='en'):
     return list(set(links))
 
 def check_pair_title(entry, link, lang):
+    '''
+        Title for some non-en articles (ex. hi, ml)
+        can be in English. Below code takes care of that.
+    '''
     arg = {'{}_title'.format(lang): entry.title}
-    nonen_title1 = Titles.query.filter_by(**arg).first()
+    nonen_title = Titles.query.filter_by(**arg).first()
 
-    nonen_title2 = Titles.query.filter(
+    nonen_title_en = Titles.query.filter(
                         Titles.en_title==entry.title
                     ).first()
-    nonen_title = nonen_title1 or nonen_title2
+    nonen_title = nonen_title or nonen_title_en
     
     en_title = Titles.query.filter(
                     Titles.en_title==link.title
@@ -44,8 +49,6 @@ def check_pair_length(entry, link, diff=30):
     if length_diff <= diff:
         return True
     else:
-        # print(len(lang_segments), len(en_segments))
-        # print(entry.id, link.id, length_diff)
         return False
 
 def check_retrieval(entry, link, model):
@@ -84,7 +87,6 @@ def calculate_threshold(lang, model):
     plt.savefig('./plots/{}_{}.png'.format(lang, model))
     plt.close()
     print('mean: {} \n var: {} \n std: {} \n '.format(mean, var, std))
-    #return mean#std#mean+std
 
 def sanity_check(lang, model):
     entries = Entry.query.filter(Entry.lang==lang).all()
@@ -104,7 +106,7 @@ def sanity_check(lang, model):
             if check_pair_title(entry, link, lang):
                 title_match += 1 
                 # if check_pair_length(entry, link):
-                #     content_length[ix] += 1
+                #    content_length += 1
                 if check_retrieval(entry, link, model):
                     retrieved += 1
 
@@ -114,23 +116,20 @@ def sanity_check(lang, model):
     print('content_length', content_length)
     print('retrieved', retrieved, model, '\n')
 
-def inspect(entry_id, model):
-    query = Translation.query.filter(and_(
-                    Translation.parent_id==entry_id, 
-                    Translation.model==model)).first()
-    query_content = query.translated.splitlines()
-    query_content = detok(query_content)    
-    query_content = '\n'.join(query_content)
-    query_content = preprocess(query_content)
-    pprint(query_content,)
-    ret = retrieve_neighbours_en(entry_id, model)
-    pprint(ret)
-
 if __name__ == '__main__':
+    '''
+        Sanity checks on a gold dataset determined
+        by dates, title and content based matches.
+    ''' 
     parser=ArgumentParser()
-    parser.add_argument('lang', help='language of the content')
+    parser.add_argument('lang', help='language for sanity checks')
     args = parser.parse_args()
     lang = args.lang
-    for model in ['mm-to-en-iter1', 'mm_all_iter0']:#, 'mm_all_iter1', 'mm_toEN_iter1']:
-        # inspect(1555055, model)
+
+    engine = from_pretrained(tag='mm-to-en-iter1', use_cuda=False)
+    segmenter = engine.segmenter
+    #models = ['mm-all-iter1', 'mm-to-en-iter1', 'mm_all_iter0', 'mm-all-iter0', 'mm_toEN_iter1']:
+    models = ['mm-all-iter1']
+
+    for model in models:
         sanity_check(lang, model)

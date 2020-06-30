@@ -146,39 +146,71 @@ def retrieve_neighbours_en(query_id, tokenizer, model='mm_toEN_iter1', length_ch
         processed = preprocess(content.content)
         candidate_corpus.append(processed)
 
-    tf = RetrievalEngine(query_content, candidate_corpus, new_candidates)
-    export = tf.reorder()
-
-    truncate_length = min(5, len(export))
-    export = export[:truncate_length]
+    if candidate_corpus:
+        tf = RetrievalEngine(query_content, candidate_corpus, new_candidates)
+        export = tf.reorder()
+        truncate_length = min(5, len(export))
+        export = export[:truncate_length]
+    else:
+        export = []
     return export
 
 
-def retrieve_neighbours_nonen(query_id):
-    candidates = get_candidates(query_id, 2)
-    candidate_ids = defaultdict(list)
-    candidate_corpus = defaultdict(list)
-    export = defaultdict(list)
-    ids = [c[0] for c in candidates]
-    candidate_langs = [c[1] for c in candidates]     
-    query = Entry.query.filter(Entry.id == query_id).first()
-    query_content = preprocess(query.content)     
-    candidate_content = Translation.query\
-                        .filter(Translation.parent_id.in_(ids))\
-                        .all()
 
-    for lang, content in zip(candidate_langs, candidate_content):
-        processed = preprocess(content.translated)
-        candidate_corpus[lang].append(processed)
-        candidate_ids[lang].append(content.parent_id)
+def get_candidates_by_lang(query_id, lang, days):
+    delta = timedelta(days = days)
+    query = (
+        db.session.query(Entry)
+            .filter(Entry.id==query_id)
+            .first()
+    )
+    candidates = []
+    matches = (
+        db.session.query(Entry.id) 
+            .filter(Entry.lang==lang)
+            .filter(Entry.date.between(query.date-delta,query.date+delta))
+            .all()
+    )
+    for match in matches:
+        candidates.append(match.id)   
+    return candidates
 
-    for lang in candidate_corpus.keys():
-        similarities = tfidf(query_content, candidate_corpus[lang])
-        export[lang] = reorder(candidate_ids[lang], similarities)
-      
-    for lang in export:
-        length = len(export[lang])
-        truncate_length = min(5, length)
-        export[lang] = export[lang][:truncate_length]
-    return export   
-    
+
+def retrieve_neighbours(query_id, 
+                        pivot_lang, 
+                        tokenizer, 
+                        model='mm_all_iter1', 
+                        length_check=True):
+
+    candidates = get_candidates_by_lang(query_id, pivot_lang, days=2)
+    query = (
+        Translation.query.filter(
+            and_(
+                Translation.parent_id == query_id, 
+                Translation.model == model,
+                Translation.lang == pivot_lang
+            )
+        ).first()
+    )
+    preprocess = SPMPreprocessor(tokenizer, lang=pivot_lang)
+    query_content = preprocess(clean_translation(tokenizer, query))
+
+    candidate_content = Entry.query.filter(Entry.id.in_(candidates)).all()
+    new_candidates = [ncc.id for ncc in candidate_content]
+
+    candidate_corpus = []
+    for content in candidate_content:
+        if content.content is None:
+            print(content, content.content, content.id)
+        content.content = content.content or ''
+        processed = preprocess(content.content)
+        candidate_corpus.append(processed)
+
+    if candidate_corpus:
+        tf = RetrievalEngine(query_content, candidate_corpus, new_candidates)
+        export = tf.reorder()
+        truncate_length = min(5, len(export))
+        export = export[:truncate_length]
+    else:
+        export = []
+    return export

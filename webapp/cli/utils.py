@@ -130,17 +130,20 @@ class ParallelWriter:
         self.files = {}
 
     def get_fp(self, src, tgt):
+        fst, snd = sorted([src, tgt])
+        dirname = '{}-{}'.format(fst, snd)
+        fpath = os.path.join(self.fpath, dirname)
         
-        if not os.path.exists(fpath):
-            os.makedirs(fpath)
+        if not os.path.exists(self.fpath):
+            os.makedirs(self.fpath)
 
         if (src, tgt) in self.files:
             return self.files[(src, tgt)]
 
 
         self.files[(src, tgt)] = [
-            open(os.path.join(fpath, '{}.{}'.format(fname, src)), 'w'),
-            open(os.path.join(fpath, '{}.{}'.format(fname, tgt)), 'w')
+            open(os.path.join(self.fpath, '{}.{}'.format(self.fname, src)), 'w'),
+            open(os.path.join(self.fpath, '{}.{}'.format(self.fname, tgt)), 'w')
         ]
         return self.files[(src, tgt)]
 
