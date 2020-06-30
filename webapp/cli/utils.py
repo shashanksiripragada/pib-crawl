@@ -1,15 +1,11 @@
 import os
 from io import StringIO
 from ilmulti.utils.language_utils import inject_token
-from ilmulti.segment import SimpleSegmenter, Segmenter
-from ilmulti.sentencepiece import SentencePieceTokenizer
 from collections import defaultdict
 from copy import deepcopy
-from urduhack.tokenization import sentence_tokenizer
 
 class Batch:
     def __init__(self, uids, lines, state):
-        #self.uids = uids
         self.uids = uids
         self.lines = lines
         self.target = None
@@ -65,11 +61,11 @@ class BatchBuilder:
                 print('{} {} has no content, skipping entry'.format(entry.lang, entry.id))
                 self.index = self.index+1
             
-            if flag:
+            elif flag:
                 print('{} {} has translation for specified model, skipping entry'.format(entry.lang, entry.id))
                 self.index = self.index+1
 
-            if entry.content and not flag:             
+            else:
                 _uids, _lines, max_len, token_count = self.get_entry(entry)
                 current_ptpb = len(_lines) * max_len
                 if current_ptpb > self.max_tokens:
@@ -95,13 +91,10 @@ class BatchBuilder:
 
             if self.index > len(self.entries):
                 break
+
         return Batch(uids, lines, state)
 
 
-'''
-def collect(batches):
-    list of entries, ready to be written
-'''      
 class Preproc:
     def __init__(self, segmenter, tokenizer):
         self.segmenter = segmenter
@@ -115,6 +108,7 @@ class Preproc:
 
     def process(self, content, lang):
         if lang == 'ur':
+            from urduhack.tokenization import sentence_tokenizer
             lang, segments = sentence_tokenizer(content)
             tokenized, _io = self.create_stringio(segments, lang)
             return tokenized, _io
