@@ -1,67 +1,67 @@
 import os
 import sys
 from tqdm import tqdm
-from webapp import db
-from webapp.models import Entry, Link, Translation, Retrieval
-from webapp.retrieval import retrieve_neighbours_en
+from .. import db
+from ..models import Entry, Link, Translation, Retrieval
+from ..retrieval import retrieve_neighbours_en
 from sqlalchemy import func, and_
 from argparse import ArgumentParser
 from ilmulti.translator import from_pretrained
 
-def store_retrieved(model, langs):    
-    
-    entries = Entry.query.filter(
-                    Entry.lang.in_(langs)
-                ).all()
+def store_retrieved(model, langs, force_redo=False, resume_from=0):    
+    op_model = from_pretrained(tag=model, use_cuda=True)
+    queries = (
+        Translation.query.filter(
+            and_(
+                Translation.model==model, 
+            )
+        ).all()
+    )
 
-    entry_ids = [entry.id for entry in entries]
-    
-    queries =   Translation.query.filter(
-                    and_(
-                        Translation.model==model, 
-                        Translation.parent_id.in_(entry_ids)
-                    )
-                ).all()
-
+    counter = 0
     for query in tqdm(queries):
+        if counter < resume_from:
+            counter += 1
+            continue;
+
+        counter += 1
         if query.translated:
-            exists = Retrieval.query.filter(
-                        and_(
-                            Retrieval.query_id==query.parent_id,
-                            Retrieval.model==model
-                        )
-                    ).first()
-            if not exists:
-                try:
-                    retrieved = retrieve_neighbours_en(
-                                    query.parent_id, 
-                                    op_model.tokenizer, 
-                                    model=model
-                                )
-                except:
-                    print(query.parent_id,file=error)
-                    continue
-                else:
-                    retrieved_id = retrieved[0][0]
-                    score = retrieved[0][1]   
-                    entry = Retrieval(
-                                query_id=query.parent_id, 
-                                retrieved_id=retrieved_id,
-                                score=score, 
-                                model=model
-                            )
-                    try:
-                        db.session.add(entry)
-                        db.session.commit()
-                    except:
-                        print(query.parent_id,file=error)
+            retrieval_entry = (
+                Retrieval.query.filter(
+                    and_(
+                        Retrieval.query_id==query.parent_id,
+                        Retrieval.model==model
+                    )
+                ).first()
+            )
+            if not retrieval_entry or force_redo:
+                retrieved = retrieve_neighbours_en(query.parent_id, 
+                                                    op_model.tokenizer, 
+                                                    model=model)
+                if retrieved:
+                    first = retrieved[0]
+                    retrieved_id, score = first
+                    if retrieval_entry:
+                        retrieval_entry.retrieved_id = retrieved_id
+                        retrieval_entry.score = score
+
+                    else:
+                        retrieval_entry = Retrieval(
+                                            query_id=query.parent_id, 
+                                            retrieved_id=retrieved_id,
+                                            score=score, 
+                                            model=model
+                                        )
+
+                    db.session.add(retrieval_entry)
+                    db.session.commit()
 
 if __name__ == '__main__':
     langs = ['hi', 'ta', 'te', 'ml', 'bn', 'gu', 'mr', 'pa', 'or']#, 'ur']
+    # langs = ['ml']
     parser=ArgumentParser()
     parser.add_argument('--model', help='retrieval based on model used for tanslation', required=True)
+    parser.add_argument('--resume-from', help='', default=0, type=int)
+    parser.add_argument('--force-redo', help='', action='store_true')
     args = parser.parse_args()
-    model = args.model
-    op_model = from_pretrained(tag=model, use_cuda=True)
-    error = open('retrieval_error.txt', 'a')
-    store_retrieved(model, langs)
+    store_retrieved(args.model, langs, args.force_redo, args.resume_from)
