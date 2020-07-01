@@ -1,4 +1,3 @@
-import os
 import numpy as np
 from io import StringIO
 from tqdm import tqdm
@@ -67,7 +66,7 @@ def calculate_threshold(scores):
     threshold = mean
     return threshold
 
-def export(src_lang, tgt_lang, model):
+def export(src_lang, tgt_lang, model, resume_from=0):
     entries = Entry.query.filter(
                 Entry.lang==src_lang
               ).all()
@@ -81,8 +80,13 @@ def export(src_lang, tgt_lang, model):
                 ).all()
     scores = [r.score for r in retrieved if r]     
     threshold = calculate_threshold(scores)
-
+    counter = 0
     for entry in tqdm(entries):
+        if counter < resume_from:
+            counter += 1
+            continue;
+
+        counter += 1
         #date_links = get_datelinks(entry)
         src_io, hyp_io, exists = get_src_hyp_io(entry.id, tgt_lang, model)
         if exists:            
@@ -97,16 +101,15 @@ def export(src_lang, tgt_lang, model):
                 retrieved_id, score = retrieved.retrieved_id, retrieved.score
                 tgt_io = get_tgt_io(retrieved_id)
                 # if retrieved_id in date_links:
-                #     align(
-                #         score, threshold, 
+                #     align( 
                 #         src_io, tgt_io, hyp_io, 
                 #         entry.id, retrieved_id
                 #     )
                 if score >= threshold:                    
                     align(
-                        score, threshold, 
                         src_io, tgt_io, hyp_io, 
-                        entry.id, retrieved_id
+                        entry.id, 
+                        retrieved_id
                     )
 
 if __name__ == '__main__':
@@ -114,6 +117,7 @@ if __name__ == '__main__':
     parser.add_argument('--src_lang', help='source language, non-english', required=True)
     parser.add_argument('--tgt_lang', help='target language', required=True )
     parser.add_argument('--model', help='translation model for generating dataset', required=True)
+    parser.add_argument('--resume-from', help='', default=0, type=int)
     args = parser.parse_args()
 
     src_lang, tgt_lang = args.src_lang, args.tgt_lang
@@ -127,4 +131,4 @@ if __name__ == '__main__':
     src_file = open('pib_{}_en-{}.{}.txt'.format(model, src_lang, src_lang),'a')
     tgt_file = open('pib_{}_en-{}.{}.txt'.format(model, src_lang, tgt_lang),'a')
     
-    export(src_lang, tgt_lang, model)
+    export(src_lang, tgt_lang, model, args.resume_from)
