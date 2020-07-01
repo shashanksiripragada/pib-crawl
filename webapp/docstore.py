@@ -12,7 +12,8 @@ from flask import Blueprint
 from sqlalchemy import and_
 from . import models as M
 from . import db
-from .retrieval import retrieve_neighbours_en, retrieve_neighbours_nonen
+from .models import Entry, Link, Titles
+from .retrieval import retrieve_neighbours_en, retrieve_neighbours
 from .utils import split_and_wrap_in_p, clean_translation, detok
 
 from ilmulti.translator import from_pretrained
@@ -33,14 +34,25 @@ def entry(id):
 
     # Replace model: str with models table.
     # models = ['mm-to-en-iter1', 'mm_toEN_iter1', 'mm_all_iter1', 'mm_all_iter0']
-    models = ['mm-to-en-iter1']
+    models = ['mm-all-iter1', 'mm-to-en-iter1']
+
     group = defaultdict(list)
 
     x.content = split_and_wrap_in_p(x.content)
 
     if x.lang != 'en':
         for model in models:
-            retrieved = retrieve_neighbours_en(x.id, op_model.tokenizer, model=model)
+            if model=='mm-all-iter1':
+                pivot_lang='hi'
+            else:
+                pivot_lang='en'
+            #retrieved = retrieve_neighbours_en(x.id, op_model.tokenizer, model=model)
+            retrieved = retrieve_neighbours(
+                            x.id,
+                            pivot_lang=pivot_lang, 
+                            tokenizer=op_model.tokenizer, 
+                            model=model
+                        )
             group[model] = retrieved
 
     return render_template('entry.html', entry=x, retrieved=group)
@@ -63,8 +75,7 @@ def listing():
             for link in links:
                 if link.second.lang=='en':
                     entries.add(entry)
-
-    entries = list(entries)
+    print(len(entries))
     return render_template('listing.html', entries=entries)
 
 
