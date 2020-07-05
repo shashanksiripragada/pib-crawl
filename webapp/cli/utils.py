@@ -142,8 +142,8 @@ class ParallelWriter:
 
 
         self.files[(src, tgt)] = [
-            open(os.path.join(self.fpath, '{}.{}'.format(self.fname, src)), 'w'),
-            open(os.path.join(self.fpath, '{}.{}'.format(self.fname, tgt)), 'w')
+            open(os.path.join(fpath, '{}.{}'.format(self.fname, src)), 'w'),
+            open(os.path.join(fpath, '{}.{}'.format(self.fname, tgt)), 'w')
         ]
         return self.files[(src, tgt)]
 

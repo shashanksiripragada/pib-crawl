@@ -31,7 +31,8 @@ def translate(engine, max_tokens, model, langs, tgt_lang = 'en', force_rebuild=F
             Translation.query.filter(
                 and_(
                     Translation.parent_id == entry.id,
-                    Translation.model == model
+                    Translation.model == model,
+                    Translation.lang == tgt_lang
                 )
             ).first()
         )
@@ -70,7 +71,8 @@ def translate(engine, max_tokens, model, langs, tgt_lang = 'en', force_rebuild=F
                     Translation.query.filter(
                         and_(
                             Translation.parent_id==entry_id, 
-                            Translation.model==model
+                            Translation.model==model,
+                            Translation.lang == tgt_lang
                         )
                     ).first()
                 )
