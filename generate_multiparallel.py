@@ -4,8 +4,6 @@ import os
 import pandas as pd
 import langid
 from argparse import ArgumentParser
-#from ilmulti.sentencepiece import SentencePieceTokenizer
-
 
 class ParallelWriter:
     def __init__(self, fpath, fname):
@@ -49,10 +47,6 @@ def collect(xx, yy, input_dir, pwriter):
 
     dxx = dirname(xx)
     dyy = dirname(yy)
-    # with open('./{}/{}/mkb-filt.{}'.format(input_dir, dxx, xx)) as src1,\
-    #      open('./{}/{}/mkb-filt.en'.format(input_dir, dxx)) as tgt1,\
-    #      open('./{}/{}/mkb-filt.{}'.format(input_dir, dyy, yy)) as src2,\
-    #      open('./{}/{}/mkb-filt.en'.format(input_dir, dyy)) as tgt2:
     with open('./{}/{}/train.{}'.format(input_dir, dxx, xx)) as src1,\
          open('./{}/{}/train.en'.format(input_dir, dxx)) as tgt1,\
          open('./{}/{}/train.{}'.format(input_dir, dyy, yy)) as src2,\
@@ -83,16 +77,19 @@ def get_stats(langs, fpath, fname):
         data[lang] = 0
 
     df = pd.DataFrame(data, index = langs)
-    perm = permutations(langs, 2) 
+    perm = permutations(langs, 2)
+    vix=0
+    for direction in list(perm):
+        direction = sorted(direction)
+        xx, yy = direction
 
-    for i in list(perm):
         try:
-            src = open('{}/{}-{}/{}.{}'.format(fpath,i[0], i[1], fname,i[1]), 'r')
-            #tgt = open('./extract/{}-{}/mkb.{}'.format(i[0], i[1], i[1]), 'r')
+            src = open('{}/{}-{}/{}.{}'.format(fpath, xx, yy, fname, yy), 'r')
+            vix+=1
             count=0
             for line in src:
                 count+=1
-            src, tgt = i
+            src, tgt = direction
             a, b = langs.index(src), langs.index(tgt)
 
             if a>b:
@@ -100,10 +97,10 @@ def get_stats(langs, fpath, fname):
             df.at[src, tgt] = count
 
         except:
-            #df.at[i[0],i[1]] = 0
+            #df.at[xx, yy] = 0
             pass            
-
-    df.to_csv('grid_pib_filt.csv')
+    print(vix)
+    df.to_csv('grid_pib_v2.csv')
 
 if __name__ == '__main__':
     parser=ArgumentParser()
@@ -111,16 +108,14 @@ if __name__ == '__main__':
     parser.add_argument('--fpath', help='path to write multilingual data',  required=True)
     parser.add_argument('--fname', help='name to be written',  required=True)
     args = parser.parse_args()
-    #fpath = './mkb-filt/'
-    #fname = 'mkb-filt'
     pwriter = ParallelWriter(args.fpath, args.fname)
-    langs = ['en', 'hi', 'ta', 'te', 'ml', 'ur', 'bn', 'gu', 'mr', 'or', 'pa']
+    langs = ['en', 'hi', 'ta', 'te', 'ml', 'bn', 'gu', 'mr', 'or', 'pa']
     #langs = sorted(langs)
     perm = combinations(langs, 2)
-    # for xx, yy in list(perm):
-    #     if  'en' not in [xx, yy]:
-    #         print(xx, yy)
-    #         collect(xx, yy, args.input_dir, pwriter)
+    for xx, yy in list(perm):
+        if  'en' not in [xx, yy]:
+            print(xx, yy)
+            collect(xx, yy, args.input_dir, pwriter)
     get_stats(langs, args.fpath, args.fname)
 
 

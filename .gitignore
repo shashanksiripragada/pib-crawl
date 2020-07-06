@@ -25,6 +25,6 @@ cli/train.en-*
 titles/
 plots/
 env/
-
+mkb/
 *.tar.gz
 *.sqlite

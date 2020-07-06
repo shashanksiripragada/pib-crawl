@@ -134,8 +134,8 @@ class ParallelWriter:
         dirname = '{}-{}'.format(fst, snd)
         fpath = os.path.join(self.fpath, dirname)
         
-        if not os.path.exists(self.fpath):
-            os.makedirs(self.fpath)
+        if not os.path.exists(fpath):
+            os.makedirs(fpath)
 
         if (src, tgt) in self.files:
             return self.files[(src, tgt)]
