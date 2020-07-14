@@ -3,17 +3,18 @@ import sys
 from tqdm import tqdm
 from .. import db
 from ..models import Entry, Link, Translation, Retrieval
-from ..retrieval import retrieve_neighbours_en
+from ..retrieval import retrieve_neighbours_en, retrieve_neighbours
 from sqlalchemy import func, and_
 from argparse import ArgumentParser
 from ilmulti.translator import from_pretrained
 
-def store_retrieved(model, langs, force_redo=False, resume_from=0):    
+def store_retrieved(model, pivot_lang, langs, force_redo=False, resume_from=0):    
     op_model = from_pretrained(tag=model, use_cuda=True)
     queries = (
         Translation.query.filter(
             and_(
-                Translation.model==model, 
+                Translation.model==model,
+                Translation.lang==pivot_lang 
             )
         ).all()
     )
@@ -35,9 +36,10 @@ def store_retrieved(model, langs, force_redo=False, resume_from=0):
                 ).first()
             )
             if not retrieval_entry or force_redo:
-                retrieved = retrieve_neighbours_en(query.parent_id, 
-                                                    op_model.tokenizer, 
-                                                    model=model)
+                retrieved = retrieve_neighbours(query.parent_id,
+                                                pivot_lang, 
+                                                op_model.tokenizer, 
+                                                model=model)
                 if retrieved:
                     first = retrieved[0]
                     retrieved_id, score = first
@@ -57,11 +59,12 @@ def store_retrieved(model, langs, force_redo=False, resume_from=0):
                     db.session.commit()
 
 if __name__ == '__main__':
-    langs = ['hi', 'ta', 'te', 'ml', 'bn', 'gu', 'mr', 'pa', 'or']#, 'ur']
-    # langs = ['ml']
+    #langs = ['hi', 'ta', 'te', 'ml', 'bn', 'gu', 'mr', 'pa', 'or']#, 'ur']
+    langs = ['mr', 'gu', 'pa']
     parser=ArgumentParser()
     parser.add_argument('--model', help='retrieval based on model used for tanslation', required=True)
+    parser.add_argument('--pivot-lang', help='choice of pivot lang', required=True)
     parser.add_argument('--resume-from', help='', default=0, type=int)
     parser.add_argument('--force-redo', help='', action='store_true')
     args = parser.parse_args()
-    store_retrieved(args.model, langs, args.force_redo, args.resume_from)
+    store_retrieved(args.model, args.pivot_lang, langs, args.force_redo, args.resume_from)
