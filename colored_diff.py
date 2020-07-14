@@ -6,6 +6,7 @@ import sys
 
 def colorcell(c, v):
     r, g, b, a = c
+    v = '{:.2f}'.format(v)
     g = lambda x: '{:3f}'.format(x)
     color_string = ','.join(map(g, c[:3]))
     color = '\\cellcolor[rgb]{{{c}}}{{{v}}}'.format(c=color_string, v=v)
@@ -14,6 +15,7 @@ def colorcell(c, v):
 class Grid:
     def __init__(self, path, ):
         self.df = pd.read_csv(path)
+        self.df = self.df.fillna(0)
         self.nrows, self.ncols = self.df.values.shape
         self.nrows = self.nrows + 1
         self.row_headers = self.df.values[:, 0].tolist()
@@ -110,13 +112,20 @@ def main(args):
     current = Grid(args.after)
     previous = Grid(args.before)
     diff = current.values - previous.values
-    print(diff, file=sys.stderr)
+    diff = np.array(diff, dtype=np.float32)
+    with np.printoptions(formatter={'float': '{:.2f}'.format}):
+        print(diff, file=sys.stderr)
 
     before = previous.values.sum()
     after = current.values.sum()
     increment = diff.sum()
+    M, N = diff.shape
+    assert (M == N)
+    diffs = diff.ravel()
+    diffs = diffs[diffs != 0]
+    average_increment = np.median(diffs)
 
-    print(f"Before: {before}, After: {after}, Increase: {increment}",
+    print(f"Before: {before}, After: {after}, Increase: {increment}, Median: {average_increment}",
             file=sys.stderr)
 
     mapping = ColorMapping(diff)
