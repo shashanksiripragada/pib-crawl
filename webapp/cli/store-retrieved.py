@@ -59,8 +59,7 @@ def store_retrieved(model, pivot_lang, langs, force_redo=False, resume_from=0):
                     db.session.commit()
 
 if __name__ == '__main__':
-    #langs = ['hi', 'ta', 'te', 'ml', 'bn', 'gu', 'mr', 'pa', 'or']#, 'ur']
-    langs = ['mr', 'gu', 'pa']
+    langs = ['hi', 'ta', 'te', 'ml', 'bn', 'gu', 'mr', 'pa', 'or', 'ur']
     parser=ArgumentParser()
     parser.add_argument('--model', help='retrieval based on model used for tanslation', required=True)
     parser.add_argument('--pivot-lang', help='choice of pivot lang', required=True)
