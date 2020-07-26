@@ -1,11 +1,10 @@
 import sys
-sys.path.insert(1, '../')
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 import time
 import numpy as np
-from webapp import db
-from webapp.models import Entry
+from .. import db
+from ..models import Entry
 from tqdm import tqdm
 import csv
 

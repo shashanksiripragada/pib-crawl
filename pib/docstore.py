@@ -17,9 +17,9 @@ from .retrieval import retrieve_neighbours_en, retrieve_neighbours
 from .utils import split_and_wrap_in_p, clean_translation, detok
 
 from ilmulti.translator import from_pretrained
-from tools.align import BLEUAligner
+from .tools.align import BLEUAligner
 
-op_model = from_pretrained(tag='mm-to-en-iter1', use_cuda=True)
+op_model = from_pretrained(tag='mm-to-en-iter2', use_cuda=True)
 aligner = BLEUAligner(
     op_model.translator, op_model.tokenizer,
     op_model.segmenter
@@ -34,7 +34,7 @@ def entry(id):
 
     # Replace model: str with models table.
     # models = ['mm-to-en-iter1', 'mm_toEN_iter1', 'mm_all_iter1', 'mm_all_iter0']
-    models = ['mm-all-iter1', 'mm-to-en-iter1']
+    models = ['mm-to-en-iter2', 'mm-to-en-iter1', 'mm-all-iter1']
 
     group = defaultdict(list)
 
@@ -46,7 +46,7 @@ def entry(id):
                 pivot_lang='hi'
             else:
                 pivot_lang='en'
-            #retrieved = retrieve_neighbours_en(x.id, op_model.tokenizer, model=model)
+            # retrieved = retrieve_neighbours_en(x.id, op_model.tokenizer, model=model)
             retrieved = retrieve_neighbours(
                             x.id,
                             pivot_lang=pivot_lang, 
@@ -68,15 +68,15 @@ def listing():
             .all()
     )
 
-    entries = set()
-    for entry in x:
-        if entry.neighbors:
-            links = entry.neighbors
-            for link in links:
-                if link.second.lang=='en':
-                    entries.add(entry)
-    print(len(entries))
-    return render_template('listing.html', entries=entries)
+    # entries = set()
+    # for entry in x:
+    #     if entry.neighbors:
+    #         links = entry.neighbors
+    #         for link in links:
+    #             if link.second.lang=='en':
+    #                 entries.add(entry)
+    print(len(x))
+    return render_template('listing.html', entries=x)
 
 
 @docstore.route('/parallel')
@@ -163,6 +163,7 @@ def stored_translations(entry_id):
     translations = (
         M.Translation.query.filter(
             M.Translation.parent_id == entry_id, 
+            M.Translation.lang == 'hi'
         ).all()
     )
 

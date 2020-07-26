@@ -31,8 +31,8 @@ import langid
 from ilmulti.segment import SimpleSegmenter, Segmenter
 from ilmulti.sentencepiece import SentencePieceTokenizer
 import datetime
-from webapp import db
-from webapp.models import Entry, Link, Translation
+from .. import db
+from ..models import Entry, Link, Translation
 from sqlalchemy import func
 import itertools
 from tqdm import tqdm

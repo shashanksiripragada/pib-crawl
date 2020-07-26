@@ -1,12 +1,11 @@
 import sys
-sys.path.insert(1, '../')
 from urllib.request import Request, urlopen
 import time
 import numpy as np
 import langid
 from tqdm import tqdm
-from webapp import db
-from webapp.models import Entry, Titles
+from .. import db
+from ..models import Entry, Titles
 
 def rewrite(entry):
 	_id, text, *rest = entry

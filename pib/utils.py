@@ -1,4 +1,4 @@
-from .lazy_load import get_tokenizer
+
 
 def detok(tokenizer, src_out):
     src = []

@@ -13,7 +13,7 @@ from .. import db
 from ..models import Entry, Link, Translation, Retrieval
 from .utils import Preproc, ParallelWriter
 
-from tools.align import BLEUAligner
+from ..tools.align import BLEUAligner
 
 def get_datelinks(entry, lang='en'):
     links = []
@@ -64,7 +64,7 @@ def calculate_threshold(scores):
     mean = np.mean(scores)
     var = np.var(scores)
     std = np.std(scores)
-    threshold = mean-std
+    threshold = 0.5
     return threshold
 
 def aligned_entries(model, src_lang, tgt_lang):
@@ -80,20 +80,20 @@ def aligned_entries(model, src_lang, tgt_lang):
     else:
         return False
 
-def export(src_lang, tgt_lang, model, resume_from=0):
+def export(src_lang, tgt_lang, model, threshold, resume_from=0):
     entries = Entry.query.filter(
                 Entry.lang==src_lang
               ).all()
     entry_list = [entry.id for entry in entries]
-    retrieved = Retrieval.query.filter(
-                    and_(
-                        Retrieval.query_id.in_(entry_list), 
-                        Retrieval.model==model
-                    )
-                ).all()
-    scores = [r.score for r in retrieved if r]     
-    threshold = calculate_threshold(scores)
-    aligned_dict = aligned_entries(model, src_lang, tgt_lang)
+    # retrieved = Retrieval.query.filter(
+    #                 and_(
+    #                     Retrieval.query_id.in_(entry_list), 
+    #                     Retrieval.model==model
+    #                 )
+    #             ).all()
+    # scores = [r.score for r in retrieved if r]     
+    # threshold = calculate_threshold(scores)
+    # aligned_dict = aligned_entries(model, src_lang, tgt_lang)
     counter = 0
 
     for entry in tqdm(entries):
@@ -102,9 +102,9 @@ def export(src_lang, tgt_lang, model, resume_from=0):
             continue;
         counter += 1
         # date_links = get_datelinks(entry)        
-        is_aligned = entry.id in aligned_dict
+        # is_aligned = entry.id in aligned_dict
         src_io, hyp_io, exists = get_src_hyp_io(entry.id, tgt_lang, model)
-        if exists and not is_aligned:            
+        if exists: #and not is_aligned:            
             retrieved = Retrieval.query.filter(
                             and_(
                                 Retrieval.query_id==entry.id, 
@@ -132,10 +132,11 @@ if __name__ == '__main__':
     parser.add_argument('--tgt_lang', help='target language', required=True )
     parser.add_argument('--model', help='translation model for generating dataset', required=True)
     parser.add_argument('--resume-from', help='', default=0, type=int)
+    parser.add_argument('--threshold', help='', default=0.5, type=float)
     args = parser.parse_args()
 
     src_lang, tgt_lang = args.src_lang, args.tgt_lang
-    model = args.model
+    model, threshold = args.model, args.threshold
 
     # LOG_FILENAME = '{}.log'.format(model)
     # logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
@@ -149,3 +150,4 @@ if __name__ == '__main__':
     pwriter = ParallelWriter(fpath, fname='aligned')
     aligned = open('{}-aligned-{}-{}.txt'.format(model, src_lang, tgt_lang), 'a')
     export(src_lang, tgt_lang, model, args.resume_from)
+

@@ -92,27 +92,33 @@ class ColorMapping:
         return self.values.__repr__()
 
 
-def pretty_grid(current, mapping):
+def pretty_grid(current, mapping, diff, row_diff_sum, col_diff_sum):
     print('&'.join([''] + current.column_headers) , '\\\\')
     for i in range(0, current.nrows-1):
         vals = []
         vals.append(str(current.row_headers[i]))
         for j in range(0, current.ncols-1):
             if i != j:
-               v = current.__getitem__(i, j)
+               #v = current.__getitem__(i, j)
+               v = diff[i,j]
                cell = mapping.color(i, j, v)
                vals.append(cell)
             else:
                vals.append('')
         
         print('&'.join(vals), end='')
+        print('&{:.2f}'.format(row_diff_sum[i]))
         print('\\\\')
+    col_diff_sum = ['{:.2f}'.format(x) for x in col_diff_sum]
+    print('&'.join(col_diff_sum))
 
 def main(args):
     current = Grid(args.after)
     previous = Grid(args.before)
     diff = current.values - previous.values
     diff = np.array(diff, dtype=np.float32)
+    row_diff_sum = np.sum(diff, axis=1).tolist()
+    col_diff_sum = np.sum(diff, axis=0).tolist()
     with np.printoptions(formatter={'float': '{:.2f}'.format}):
         print(diff, file=sys.stderr)
 
@@ -125,11 +131,11 @@ def main(args):
     diffs = diffs[diffs != 0]
     average_increment = np.median(diffs)
 
-    print(f"Before: {before}, After: {after}, Increase: {increment}, Median: {average_increment}",
-            file=sys.stderr)
+    print("Before:{}".format(before), "After: {}".format(after)
+            , "Increase: {}".format(increment), 'Median: {}'.format(average_increment))
 
     mapping = ColorMapping(diff)
-    pretty_grid(current, mapping)
+    pretty_grid(current, mapping, diff, row_diff_sum, col_diff_sum)
 
 if __name__ == '__main__':
     parser = ArgumentParser()

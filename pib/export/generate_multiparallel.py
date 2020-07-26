@@ -47,10 +47,11 @@ def collect(xx, yy, input_dir, pwriter):
 
     dxx = dirname(xx)
     dyy = dirname(yy)
-    with open('./{}/{}/train.{}'.format(input_dir, dxx, xx)) as src1,\
-         open('./{}/{}/train.en'.format(input_dir, dxx)) as tgt1,\
-         open('./{}/{}/train.{}'.format(input_dir, dyy, yy)) as src2,\
-         open('./{}/{}/train.en'.format(input_dir, dyy)) as tgt2:
+    fname = 'train'
+    with open('./{}/{}/{}.{}'.format(input_dir, dxx, fname, xx)) as src1,\
+         open('./{}/{}/{}.en'.format(input_dir, dxx, fname)) as tgt1,\
+         open('./{}/{}/{}.{}'.format(input_dir, dyy, fname, yy)) as src2,\
+         open('./{}/{}/{}.en'.format(input_dir, dyy, fname)) as tgt2:
         
         for s1, t1 in zip(src1, tgt1):
             s1 = s1.strip()
@@ -78,14 +79,14 @@ def get_stats(langs, fpath, fname):
 
     df = pd.DataFrame(data, index = langs)
     perm = permutations(langs, 2)
-    vix=0
+    pairs = 0
     for direction in list(perm):
         direction = sorted(direction)
         xx, yy = direction
 
         try:
             src = open('{}/{}-{}/{}.{}'.format(fpath, xx, yy, fname, yy), 'r')
-            vix+=1
+            pairs+=1
             count=0
             for line in src:
                 count+=1
@@ -99,8 +100,8 @@ def get_stats(langs, fpath, fname):
         except:
             #df.at[xx, yy] = 0
             pass            
-    print(vix)
-    df.to_csv('grid_pib_v2.csv')
+    print(pairs)
+    df.to_csv('grid_pib_v0.2.csv')
 
 if __name__ == '__main__':
     parser=ArgumentParser()
@@ -109,8 +110,7 @@ if __name__ == '__main__':
     parser.add_argument('--fname', help='name to be written',  required=True)
     args = parser.parse_args()
     pwriter = ParallelWriter(args.fpath, args.fname)
-    langs = ['en', 'hi', 'ta', 'te', 'ml', 'bn', 'gu', 'mr', 'or', 'pa']
-    #langs = sorted(langs)
+    langs = ['en','hi','ta','te','ml','ur','bn','gu','mr','or','pa']
     perm = combinations(langs, 2)
     for xx, yy in list(perm):
         if  'en' not in [xx, yy]:
