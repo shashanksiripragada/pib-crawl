@@ -28,3 +28,4 @@ env/
 mkb/
 *.tar.gz
 *.sqlite
+env/
