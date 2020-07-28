@@ -1,12 +1,12 @@
-DB="./webapp/"
-ILMULTI=".ilmulti"
+DB=./pib
+ILMULTI=$HOME/.ilmulti
 
 mkdir -p $ILMULTI
 
 
-url="http://preon.iiit.ac.in/~jerin/resources/datasets/pib-crawled-sqlite.db" 
+url="http://preon.iiit.ac.in/~jerin/resources/datasets/pib-crawled.db.tar.gz" 
 
-file="pib-crawled-sqlite.db"
+file=$DB/pib-crawled.db.tar.gz
 
 if [ -f $file ]; then
     echo "$file already exists, skipping download"
@@ -23,7 +23,9 @@ else
         tar zxvf $file
     elif [ ${file: -4} == ".tar" ]; then
         tar xvf $file
+    elif [ ${file: -7} == ".tar.gz" ]; then
+        tar xvf $file
     fi
 fi
 
-mv $file $DB/$file 
+mv *.db $DB/ 

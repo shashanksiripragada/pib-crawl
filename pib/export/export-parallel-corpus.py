@@ -11,7 +11,7 @@ from ilmulti.translator import from_pretrained
 
 from .. import db
 from ..models import Entry, Link, Translation, Retrieval
-from .utils import Preproc, ParallelWriter
+from ..cli.utils import Preproc, ParallelWriter
 
 from ..tools.align import BLEUAligner
 
@@ -129,8 +129,8 @@ def export(src_lang, tgt_lang, model, threshold, resume_from=0):
 if __name__ == '__main__':
     parser=ArgumentParser()
     parser.add_argument('--src_lang', help='source language, non-english', required=True)
-    parser.add_argument('--tgt_lang', help='target language', required=True )
-    parser.add_argument('--model', help='translation model for generating dataset', required=True)
+    parser.add_argument('--tgt_lang', help='target language', default='en' )
+    parser.add_argument('--model', help='translation model for generating dataset', default='mm-to-en-iter2')
     parser.add_argument('--resume-from', help='', default=0, type=int)
     parser.add_argument('--threshold', help='', default=0.5, type=float)
     args = parser.parse_args()

@@ -1,5 +1,5 @@
-for var in ta te ml bn gu mr pa or
+for lang in hi ta te ml bn gu mr pa or ur
 do
-python3 -m webapp.cli.export-parallel-corpus --src_lang $var --tgt_lang en --model mm-to-en-iter1
-python3 -m webapp.cli.filter-alignments --src_lang $var --tgt_lang en --model mm-to-en-iter1
+python3 -m pib.export.export-parallel-corpus --src_lang $lang 
+python3 -m pib.export.filter-alignments --src_lang $lang
 done

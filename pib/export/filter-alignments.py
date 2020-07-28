@@ -3,7 +3,7 @@ from io import StringIO
 from argparse import ArgumentParser
 
 from ilmulti.translator import from_pretrained
-from .utils import Preproc, ParallelWriter
+from ..cli.utils import Preproc, ParallelWriter
 
 import langid
 from langid.langid import LanguageIdentifier
@@ -69,8 +69,8 @@ def filter_lines(src_lang, src_aligned, tgt_lang, tgt_aligned):
 if __name__ == '__main__':
     parser=ArgumentParser()
     parser.add_argument('--src_lang', help='source language, non-english', required=True)
-    parser.add_argument('--tgt_lang', help='target language', required=True )
-    parser.add_argument('--model', help='translation model for generating dataset', required=True)
+    parser.add_argument('--tgt_lang', help='target language', default='en')
+    parser.add_argument('--model', help='translation model for generating dataset', default='mm-to-en-iter2')
     args = parser.parse_args()
     src_lang, tgt_lang = args.src_lang, args.tgt_lang
     model = args.model
