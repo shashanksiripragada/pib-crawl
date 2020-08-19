@@ -11,9 +11,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import string
 import re
-from nltk.corpus import stopwords
-from nltk.tokenize import sent_tokenize, word_tokenize
-from nltk.stem import PorterStemmer
 from .utils import clean_translation
 from pprint import pprint
 
@@ -68,23 +65,6 @@ class RetrievalEngine:
             for idx in sorted_indices
         ]
 
-def preprocess(corpus):
-    # takes in document content and returns processed document as string
-    stop_words = set(stopwords.words('english'))
-    ps = PorterStemmer()
-    processed = []
-    corpus = corpus.splitlines()
-    #corpus = sent_tokenize(corpus)
-    for corp in corpus:
-        translator = str.maketrans('','',string.punctuation)
-        corp = corp.translate(translator)
-        tokens = word_tokenize(corp)
-        no_stop = [ps.stem(w.lower()) for w in tokens if not w in stop_words]
-        alpha = [re.sub(r'\W+', '', a) for a in no_stop]
-        alpha = [a for a in alpha if a]
-        for a in alpha:
-            processed.append(a)
-    return ' '.join(processed)
 
 def get_candidates(query_id, days):
     langs = ['hi', 'ta', 'te', 'ml', 'ur', 'bn', 'gu', 'mr', 'pa', 'or']

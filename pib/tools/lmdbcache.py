@@ -40,22 +40,3 @@ class LMDBCacheAPI:
         sample = self.serialize(value)
         self.__setitem__(idx, sample)
 
-class LMDBCache:
-    def __init__(self, fpath):
-        self.db = LMDBCacheAPI(fpath)
-
-    def __call__(self, key, result):
-        self.db.write(key, result)
-        return result
-
-
-class LMDBCacheContextManager:
-    def __init__(self, fpath):
-        self.fpath = fpath
-
-    def __enter__(self):
-        self.cache = LMDBCache(self.fpath)
-        return self.cache
-
-    def __exit__(self, *args):
-        pass
