@@ -107,12 +107,14 @@ class Preproc:
         return tokenized, StringIO(lstring)
 
     def process(self, content, lang):
-        if lang == 'ur':
-            from urduhack.tokenization import sentence_tokenizer
-            lang, segments = sentence_tokenizer(content)
-            tokenized, _io = self.create_stringio(segments, lang)
-            return tokenized, _io
         lang, segments = self.segmenter(content, lang=lang)
+
+        # Clean empty lines.
+        non_empty_segments = []
+        for segment in segments:
+            if segment.strip():
+                non_empty_segments.append(segment)
+
         tokenized, _io = self.create_stringio(segments, lang)
         return tokenized, _io
 
