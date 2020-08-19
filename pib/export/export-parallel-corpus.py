@@ -128,6 +128,7 @@ def export(src_lang, tgt_lang, model, threshold, resume_from=0):
 
 if __name__ == '__main__':
     parser=ArgumentParser()
+    parser.add_argument('--output-dir', help='output directory', type=str, required=True)
     parser.add_argument('--src_lang', help='source language, non-english', required=True)
     parser.add_argument('--tgt_lang', help='target language', default='en' )
     parser.add_argument('--model', help='translation model for generating dataset', default='mm-to-en-iter2')
@@ -145,9 +146,10 @@ if __name__ == '__main__':
     engine = from_pretrained(tag=model, use_cuda=False)
     aligner = BLEUAligner(engine.translator, engine.tokenizer, engine.segmenter)
     preproc = Preproc(engine.segmenter, engine.tokenizer)
-    
-    fpath = '{}'.format(model)    
+
+    fpath = os.path.join(args.output_dir, args.model)
     pwriter = ParallelWriter(fpath, fname='aligned')
+
     aligned = open('{}-aligned-{}-{}.txt'.format(model, src_lang, tgt_lang), 'a')
     export(src_lang, tgt_lang, model, args.resume_from)
 

@@ -26,7 +26,7 @@ def entry(id):
 
     # Replace model: str with models table.
     # models = ['mm-to-en-iter1', 'mm_toEN_iter1', 'mm_all_iter1', 'mm_all_iter0']
-    models = ['mm-to-en-iter2', 'mm-to-en-iter1', 'mm-all-iter1']
+    models = ['mm-to-en-iter3', 'mm-to-en-iter2', 'mm-to-en-iter1', 'mm-all-iter1']
 
     group = defaultdict(list)
 
@@ -93,7 +93,7 @@ def parallel_align():
     tgt_entry =  M.Entry.query.get(tgt)
 
 
-    aligner = lazy_loads('aligner')
+    aligner = lazy_load('aligner')
     translation, alignments = aligner(
         src_entry.content, src_entry.lang, 
         tgt_entry.content, tgt_entry.lang, 

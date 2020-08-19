@@ -68,6 +68,7 @@ def filter_lines(src_lang, src_aligned, tgt_lang, tgt_aligned):
 
 if __name__ == '__main__':
     parser=ArgumentParser()
+    parser.add_argument('--output-dir', help='Output-directory', type=str, required=True)
     parser.add_argument('--src_lang', help='source language, non-english', required=True)
     parser.add_argument('--tgt_lang', help='target language', default='en')
     parser.add_argument('--model', help='translation model for generating dataset', default='mm-to-en-iter2')
@@ -80,7 +81,7 @@ if __name__ == '__main__':
     engine = from_pretrained(tag=model, use_cuda=False)
     tokenizer = engine.tokenizer
 
-    fpath= '{}'.format(model)
+    fpath = os.path.join(args.output_dir, args.model)
     dirname = '{}-{}'.format(*sorted([src_lang, tgt_lang]))
 
     unique_aligned = ParallelWriter(fpath, fname='unique_aligned')

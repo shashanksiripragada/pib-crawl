@@ -1,43 +1,69 @@
 import os
 import numpy as np
 from io import StringIO
-
-from .. import db
-from ..models import Entry, Link, Translation, Retrieval
-
-from .utils import Preproc
-
-from ilmulti.segment import Segmenter
-from ilmulti.translator import from_pretrained
-
+from ilmulti.segment import build_segmenter
 from tqdm import tqdm
 from argparse import ArgumentParser
 from sqlalchemy import func, and_
 
-def write(src_entry, src_lang):
-    print(src_entry,file=src_file)
+from .. import db
+from ..models import Entry
+
+class WriteStrategy:
+    def __init__(self, fpath):
+        self.fpath = fpath
+        self._file = open(self.fpath, 'w')
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self._file.close()
+
+class RawDump(WriteStrategy):
+    def add_content(self, content):
+        print(content, file=self._file)
 
 
-def export(src_lang):
-    uniq = set()
-    entries = db.session.query(Entry).filter(Entry.lang==src_lang).all()
-    for entry in tqdm(entries):
-        if entry.content:
-            lang, segments = segmenter(entry.content, lang=src_lang)
-            uniq.update(segments)
+class Segmented(WriteStrategy):
+    def __init__(self, fpath):
+        super().__init__(fpath)
+        self.unique = set()
 
-    print(len(uniq))
-        #output = '\n'.join(segments)
+        # TODO(jerin): Remove this hacky two lines.
+        self.segmenter = build_segmenter('pattern')
+
+    def add_content(self, content):
+        lang, segments = self.segmenter(entry.content, lang=args.lang)
+        self.unique.update(segments)
+
+    def __exit__(self, *args, **kwargs):
+        for sample in self.unique:
+            print(sample, file=self._file)
+        self._file.close()
+
+def export(args):
+    fpath = '{}.{}'.format(args.prefix, args.lang)
+
+    Strategy = Segmented if args.segment else RawDump
+    with Strategy(fpath) as strategy:
+        entries = (
+            db.session.query(Entry)
+                .filter(Entry.lang==args.lang)
+                .all()
+        )
+
+        for entry in tqdm(entries):
+            if entry.content:
+                strategy.add_content(entry.content)
+
+
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--src_lang', help='language of mono corpus', required=True)
+    parser.add_argument('--lang', help='language of mono corpus', required=True)
+    parser.add_argument('--prefix', help='prefix to the filename, lang is appended', required=True)
+    parser.add_argument('--segment', action='store_true', help='Segment lines or not using available segmenter, also enables unique.')
     args = parser.parse_args()
-    src_lang = args.src_lang
-
-    engine = from_pretrained(tag='mm-to-en-iter1', use_cuda=False)
-    segmenter = engine.segmenter
-
-    src_file = open('pib_mono.{}.txt'.format(src_lang),'a')
-    export(src_lang)
+    export(args)
 

@@ -11,16 +11,17 @@ from ilmulti.translator import from_pretrained
 def store_retrieved(model, pivot_lang, langs, force_redo=False, resume_from=0):    
     op_model = from_pretrained(tag=model, use_cuda=True)
     queries = (
-        Translation.query.filter(
+        db.session.query(Translation, Entry).join(Entry).filter(
             and_(
                 Translation.model==model,
-                Translation.lang==pivot_lang 
+                Translation.lang==pivot_lang,
+                Entry.lang.in_(langs)
             )
         ).all()
     )
 
     counter = 0
-    for query in tqdm(queries):
+    for query, _ in tqdm(queries):
         if counter < resume_from:
             counter += 1
             continue;

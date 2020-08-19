@@ -24,11 +24,14 @@ class BatchBuilder:
 
     def __iter__(self):
         self.index = 0
+        self.last_index = -1
         return self
 
     def __next__(self):
         # Return a single batch
         batch = self.next_batch()
+        assert (self.index > self.last_index), "Index isn't incremented"
+        self.last_index = self.index
         return batch
     
     def count_tokens(self, lines):
@@ -48,33 +51,33 @@ class BatchBuilder:
         token_count = self.count_tokens(injected_lines)
         return uid_list, injected_lines, max_len, token_count
 
-
     def next_batch(self):
         uids, lines = [], []
         state = defaultdict(int)
-        update_flag = True
-        while(update_flag):
+
+        # while buffer-has-space =>  pool in entries.
+        # once entries are done => construct batch.
+        check_next = True
+
+        while(check_next):
             entry = self.entries[self.index]
             flag = self.filter_f(entry)
 
             if not entry.content:
                 print('{} {} has no content, skipping entry'.format(entry.lang, entry.id))
                 self.index = self.index+1
+                state['epb'] += 1    
             
             elif flag:
                 print('{} {} has translation for specified model, skipping entry'.format(entry.lang, entry.id))
                 self.index = self.index+1
+                state['epb'] += 1    
 
             else:
                 _uids, _lines, max_len, token_count = self.get_entry(entry)
-                current_ptpb = len(_lines) * max_len
-                if current_ptpb > self.max_tokens:
-                    # skip very large entries
-                    self.index = self.index + 1
-
                 future_state = deepcopy(state)
                 def update_state_dict(state):
-                    #look ahead for update
+                    # look ahead for update
                     state['max_length'] = max(state['max_length'], max_len)
                     state['tpb'] += token_count
                     num_lines = len(lines)+len(_lines)
@@ -86,12 +89,20 @@ class BatchBuilder:
                     uids.extend(_uids)
                     lines.extend(_lines)
                     self.index = self.index + 1
+                    state['epb'] += 1    
                     state.update(future_state)
-            state['epb'] += 1    
+
+                elif (not update_flag) and (not lines):
+                    self.index = self.index + 1
+                    state['epb'] += 1    
+                    check_next = True
+                else:
+                    check_next = False
 
             if self.index > len(self.entries):
                 break
 
+        assert (uids and lines), "Batch returned empty uids and lines"
         return Batch(uids, lines, state)
 
 
@@ -101,14 +112,18 @@ class Preproc:
         self.tokenizer = tokenizer
 
     def create_stringio(self, lines, lang):
-        tokenized = [ ' '.join(self.tokenizer(line, lang=lang)[1]) \
-                for line in lines ]
+        line_buffer = []
+        merged_lines = []
+        for line in lines:
+            lang, tokens = self.tokenizer(line, lang=lang)
+            merged_lines.append(tokens)
+
+        tokenized = [ ' '.join(line) for line in merged_lines]
         lstring = '\n'.join(tokenized)
         return tokenized, StringIO(lstring)
 
     def process(self, content, lang):
         lang, segments = self.segmenter(content, lang=lang)
-
         # Clean empty lines.
         non_empty_segments = []
         for segment in segments:
