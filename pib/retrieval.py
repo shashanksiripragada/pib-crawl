@@ -98,45 +98,6 @@ def get_candidates(query_id, days):
         return candidates
 
 
-
-def retrieve_neighbours_en(query_id, tokenizer, model='mm_toEN_iter1', length_check=True):
-    candidates = get_candidates(query_id, days=2)
-    query = (
-        Translation.query.filter(
-            and_(
-                Translation.parent_id == query_id, 
-                Translation.model==model
-            )
-        ).first()
-    )
-
-    preprocess = SPMPreprocessor(tokenizer, lang='en')
-    query_content = preprocess(clean_translation(tokenizer, query))
-
-    # Candidate content.
-    # COMMENT(jerin): The following reorders stuff.
-    candidate_content = Entry.query.filter(Entry.id.in_(candidates)).all()
-    new_candidates = [ncc.id for ncc in candidate_content]
-
-    candidate_corpus = []
-    for content in candidate_content:
-        if content.content is None:
-            print(content, content.content, content.id)
-        content.content = content.content or ''
-        processed = preprocess(content.content)
-        candidate_corpus.append(processed)
-
-    if candidate_corpus:
-        tf = RetrievalEngine(query_content, candidate_corpus, new_candidates)
-        export = tf.reorder()
-        truncate_length = min(5, len(export))
-        export = export[:truncate_length]
-    else:
-        export = []
-    return export
-
-
-
 def get_candidates_by_lang(query_id, lang, days):
     delta = timedelta(days = days)
     query = (
@@ -156,11 +117,9 @@ def get_candidates_by_lang(query_id, lang, days):
     return candidates
 
 
-def retrieve_neighbours(query_id, 
-                        pivot_lang, 
-                        tokenizer, 
-                        model='mm_all_iter1', 
-                        length_check=True):
+def retrieve_neighbours(
+        query_id, pivot_lang, tokenizer, 
+        model, length_check=True):
 
     candidates = get_candidates_by_lang(query_id, pivot_lang, days=2)
     query = (
@@ -172,6 +131,11 @@ def retrieve_neighbours(query_id,
             )
         ).first()
     )
+
+    # Where to find neighbours if empty.
+    if query is None:
+        return []
+
     preprocess = SPMPreprocessor(tokenizer, lang=pivot_lang)
     query_content = preprocess(clean_translation(tokenizer, query))
 

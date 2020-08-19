@@ -3,7 +3,7 @@ import sys
 from tqdm import tqdm
 from .. import db
 from ..models import Entry, Link, Translation, Retrieval
-from ..retrieval import retrieve_neighbours_en, retrieve_neighbours
+from ..retrieval import retrieve_neighbours
 from sqlalchemy import func, and_
 from argparse import ArgumentParser
 from ilmulti.translator import from_pretrained
@@ -49,11 +49,10 @@ def store_retrieved(model, pivot_lang, langs, force_redo=False, resume_from=0):
 
                     else:
                         retrieval_entry = Retrieval(
-                                            query_id=query.parent_id, 
-                                            retrieved_id=retrieved_id,
-                                            score=score, 
-                                            model=model
-                                        )
+                            query_id=query.parent_id, 
+                            retrieved_id=retrieved_id,
+                            score=score, model=model
+                        )
 
                     db.session.add(retrieval_entry)
                     db.session.commit()
