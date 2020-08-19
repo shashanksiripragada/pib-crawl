@@ -13,17 +13,9 @@ from sqlalchemy import and_
 from . import models as M
 from . import db
 from .models import Entry, Link, Titles
-from .retrieval import retrieve_neighbours_en, retrieve_neighbours
+from .retrieval import retrieve_neighbours
 from .utils import split_and_wrap_in_p, clean_translation, detok
-
-from ilmulti.translator import from_pretrained
-from .tools.align import BLEUAligner
-
-op_model = from_pretrained(tag='mm-to-en-iter2', use_cuda=True)
-aligner = BLEUAligner(
-    op_model.translator, op_model.tokenizer,
-    op_model.segmenter
-)
+from .utils import lazy_load
 
 docstore = Blueprint('docstore', __name__, template_folder='templates')
 
@@ -46,12 +38,11 @@ def entry(id):
                 pivot_lang='hi'
             else:
                 pivot_lang='en'
-            # retrieved = retrieve_neighbours_en(x.id, op_model.tokenizer, model=model)
+
+            op_model = lazy_load('op_model')
             retrieved = retrieve_neighbours(
-                            x.id,
-                            pivot_lang=pivot_lang, 
-                            tokenizer=op_model.tokenizer, 
-                            model=model
+                            x.id, pivot_lang=pivot_lang, 
+                            tokenizer=op_model.tokenizer, model=model
                         )
             group[model] = retrieved
 
@@ -102,6 +93,7 @@ def parallel_align():
     tgt_entry =  M.Entry.query.get(tgt)
 
 
+    aligner = lazy_loads('aligner')
     translation, alignments = aligner(
         src_entry.content, src_entry.lang, 
         tgt_entry.content, tgt_entry.lang, 
@@ -112,6 +104,7 @@ def parallel_align():
     
 
     def process(src_out, tgt_out):
+        op_model = lazy_load('op_model')
         src = detok(op_model.tokenizer, src_out)
         tgt = detok(op_model.tokenizer, tgt_out)
         def wrap_pairwise(src, tgt):
@@ -136,6 +129,7 @@ def parallel_align():
     )
 
     if query:
+        op_model = lazy_load('op_model')
         translated_text = clean_translation(op_model.tokenizer, query)
 
     stored_translation = translated_text if query else ''
@@ -168,6 +162,7 @@ def stored_translations(entry_id):
     )
 
     for translation in translations:
+        op_model = lazy_load('op_model')
         cleaned = clean_translation(op_model.tokenizer, translation)
         translation.translated = split_and_wrap_in_p(cleaned)
 

@@ -18,3 +18,32 @@ def clean_translation(tokenizer, translation):
     detokenized = detok(tokenizer, lines)
     translated_text = '\n'.join(detokenized)
     return translated_text
+
+
+LAZY_LOADS = {}
+def lazy_load(key):
+
+    def op_model():
+        from ilmulti.translator import from_pretrained
+        return from_pretrained(tag='mm-to-en-iter2', use_cuda=True)
+
+    def aligner():
+        from .tools.align import BLEUAligner
+        op_model = lazy_load('op_model')
+        return BLEUAligner(
+                    op_model.translator, op_model.tokenizer,
+                    op_model.segmenter
+        )
+
+
+    lambda_wrapped = {
+        'op_model' : op_model,
+        'aligner': aligner    
+    }
+
+    if not key in LAZY_LOADS:
+        assert(key in lambda_wrapped)
+        LAZY_LOADS[key] = lambda_wrapped[key]()
+
+    return LAZY_LOADS[key]
+
