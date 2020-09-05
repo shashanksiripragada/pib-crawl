@@ -1,28 +1,65 @@
 import os
-import glob
+import string
 from collections import defaultdict
 from argparse import ArgumentParser
 from pprint import pprint
 from collections import namedtuple
 from tqdm import tqdm
-from webapp.cli.utils import ParallelWriter 
-from fuzzywuzzy import fuzz
 import editdistance
-import Levenshtein as lev
-import string
+from ..cli.utils import ParallelWriter 
 
-def dirname(xx):
-    fst, snd = sorted([xx, 'en'])
+class TestDataStorage:
+    def __init__(self, src_path, tgt_path):
+        """
+        Loads test-data into a structure and prepares to query
+        compute_closest matches when a PIB sample is called.
+        """
+        self.test_data = []
+        mkb_src = open(src_path, 'r')
+        mkb_tgt = open(tgt_path, 'r')
+
+        for src, tgt in zip(mkb_src, mkb_tgt):
+            src, tgt = src.strip(), tgt.strip()
+            self.test_data.append((src, tgt))
+
+        mkb_src.close()
+        mkb_tgt.close()
+
+    def closest(self, src_line, tgt_line):
+        srcs = []
+        tgts = []
+        for mkb_idx, (test_src, test_tgt) in enumerate(self.test_data):            
+            if eval_len_ratio(spib, test_src) or eval_len_ratio(tpib, test_tgt):  
+                src_edit = distance(src_line, test_src)
+                tgt_edit = distance(tgt_line, test_tgt)
+            else:
+                src_edit = 0
+                tgt_edit = 0
+            srcs.append((mkb_idx, src_line, test_src, src_edit))
+            tgts.append((mkb_idx, tgt_line, test_tgt, tgt_edit))
+   
+        srcs.sort(key=lambda x: x[3], reverse=True)
+        tgts.sort(key=lambda x: x[3], reverse=True)
+
+        (mkb_idx, pibs, smkb, src_dist) = srcs[0]
+        (mkb_idx, pibt, tmkb, tgt_dist) = tgts[0]
+        return srcs[0], tgts[0]
+
+
+def dirname(src_lang, tgt_lang):
+    fst, snd = sorted([src_lang, tgt_lang])
     return '{}-{}'.format(fst, snd)
 
 def distance(src, tgt):
-    src, tgt = src.strip(), tgt.strip()
+    def preproc(s):
+        s = s.strip()
+        s = s.translate(str.maketrans('', '', string.punctuation))
+        s = s.lower()
+        return s
 
-    src = src.translate(str.maketrans('', '', string.punctuation))
-    tgt = tgt.translate(str.maketrans('', '', string.punctuation))
+    src = preproc(src)
+    tgt = preproc(tgt)
 
-    src, tgt = src.lower(), tgt.lower()
-    
     #dist = lev.distance(src, tgt)
     dist = editdistance.eval(src.split(), tgt.split())
     max_len = max(len(src.split()), len(tgt.split()))
@@ -35,76 +72,45 @@ def distance(src, tgt):
 
 def eval_len_ratio(src, tgt):    
     ratio = len(src.split())/len(tgt.split())
-    if 0.7<=ratio<=1.5:
+    if 0.9<=ratio<=1.1:
         return True
     else:
         return False
 
+def main(args):
+    dxx = dirname(args.src_lang, args.tgt_lang)
+    # Load MannKiBaat into storage.
+    mdir = os.path.join(args.mkb_dir, dxx)
+    test_src_path = '{}/mkb.{}'.format(mdir, args.src_lang)
+    test_tgt_path = '{}/mkb.{}'.format(mdir, args.tgt_lang)
+    storage = TestDataStorage(test_src_path, test_tgt_path)
 
-def closest(lang, pib_src, pib_tgt, mkb_list, src_len):
-    
-    fpath = './relaxed-modf'
-    fname = 'common'
-    pwriter = ParallelWriter(fpath, fname)
-    threshold = 0.8
+    # PIB initializations
+    pdir = os.path.join(args.pib_dir, dxx)
+    pib_src = open('{}/train.{}'.format(pdir, args.src_lang), 'r')
+    pib_tgt = open('{}/train.{}'.format(pdir, args.tgt_lang), 'r')
+
+    fname = 'train.minus.mkb'
+    pwriter = ParallelWriter(pdir, fname)
     
     for pib_idx, (spib, tpib) in enumerate(tqdm(zip(pib_src, pib_tgt), total=src_len)):
         spib, tpib = spib.rstrip(), tpib.rstrip()
-        srcs, tgts = [], []
+        src_mkb, tgt_mkb = storage.closest(spib, tpib)
+        (mkb_idx, pibs, smkb, src_dist) = src_mkb
+        (mkb_idx, pibt, tmkb, tgt_dist) = tgt_mkb
 
-        for mkb_idx, (smkb, tmkb) in enumerate(mkb_list):            
-            
-            if eval_len_ratio(spib, smkb) or eval_len_ratio(tpib, tmkb):  
-                src_edit = distance(spib, smkb)
-                tgt_edit = distance(tpib, tmkb)
-            else:
-                src_edit = 0
-                tgt_edit = 0
-            
-            srcs.append((mkb_idx, spib, smkb, src_edit))
-            tgts.append((mkb_idx, tpib, tmkb, tgt_edit))
-   
-        srcs.sort(key=lambda x: x[3], reverse=True)
-        tgts.sort(key=lambda x: x[3], reverse=True)
-
-        src, tgt = srcs[:1], tgts[:1] #top 1 match
-        (mkb_idx, pibs, smkb, src_dist) = src[0]
-        (mkb_idx, pibt, tmkb, tgt_dist) = tgt[0]
-
-        if src_dist>=threshold or tgt_dist>=threshold:
-            pwriter.write(lang, 'en', (pib_idx, mkb_idx, pibs, smkb, src_dist),\
+        if src_dist>=args.threshold or tgt_dist>=args.threshold:
+            print(args.src_lang, args.tgt_lang, (pib_idx, mkb_idx, pibs, smkb, src_dist),\
                                       (pib_idx, mkb_idx, pibt, tmkb, tgt_dist))
-
-def main(pib_dir, mkb_dir, lang):
-
-    #for lang in langs:
-    dxx = dirname(lang)
-    pdir = os.path.join(pib_dir, dxx)
-    mdir = os.path.join(mkb_dir, dxx)
-
-    mkb_src = open('{}/mkb.{}'.format(mdir, lang), 'r')
-    mkb_tgt = open('{}/mkb.en'.format(mdir), 'r')
-    pib_src = open('{}/train.{}'.format(pdir, lang), 'r')
-    pib_tgt = open('{}/train.en'.format(pdir), 'r')
-
-    mkb_list = []
-    for smkb, tmkb in zip(mkb_src, mkb_tgt):
-        smkb, tmkb = smkb.strip(), tmkb.strip()
-        mkb_list.append((smkb, tmkb))
-    
-    def file_len(fname):
-        for i, l in enumerate(fname):
-            pass
-        return i + 1
-    src_len = file_len(pib_src)
-
-    pib_src = open('{}/train.{}'.format(pdir, lang), 'r')
-    closest(lang, pib_src, pib_tgt, mkb_list, src_len)
+        else:
+            pwriter.write(args.src_lang, args.tgt_lang, spib, tpib)
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--pib_dir', required=True)
-    parser.add_argument('--mkb_dir', required=True)
-    parser.add_argument('--lang', required=True)
+    parser.add_argument('--pib-dir', type=str, required=True)
+    parser.add_argument('--mkb-dir', type=str, required=True)
+    parser.add_argument('--src-lang', type=str, required=True)
+    parser.add_argument('--tgt-lang', type=str,  default='en')
+    parser.add_argument('--threshold', type=float, required=True)
     args = parser.parse_args()
-    main(args.pib_dir, args.mkb_dir, args.lang)
+    main(args)

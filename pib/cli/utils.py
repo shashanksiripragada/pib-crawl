@@ -141,10 +141,16 @@ class Preproc:
         return src   
 
 class ParallelWriter:
-    def __init__(self, fpath, fname):
+    def __init__(self, fpath, fname, unique = False):
         self.fpath = fpath
         self.fname = fname
         self.files = {}
+        self.unique = unique
+        if self.unique:
+            self._tracking_set = set()
+            # TODO(jerin): Write this later.
+            self._src_tracking_set = set()
+            self._tgt_tracking_set = set()
 
     def get_fp(self, src, tgt):
         fst, snd = sorted([src, tgt])
@@ -154,17 +160,37 @@ class ParallelWriter:
         if not os.path.exists(fpath):
             os.makedirs(fpath)
 
-        if (src, tgt) in self.files:
-            return self.files[(src, tgt)]
+        if (src, tgt) not in self.files:
+            self.files[(src, tgt)] = [
+                open(os.path.join(fpath, '{}.{}'.format(self.fname, src)), 'w'),
+                open(os.path.join(fpath, '{}.{}'.format(self.fname, tgt)), 'w')
+            ]
 
-
-        self.files[(src, tgt)] = [
-            open(os.path.join(fpath, '{}.{}'.format(self.fname, src)), 'w'),
-            open(os.path.join(fpath, '{}.{}'.format(self.fname, tgt)), 'w')
-        ]
         return self.files[(src, tgt)]
 
     def write(self, src, tgt, srcline, tgtline):
+        if self.unique:
+            tpl = (srcline, tgtline)
+            add_flag = tpl not in self._tracking_set
+            if add_flag:
+                self._tracking_set.add(tpl)
+                self._write(src, tgt, srcline, tgtline)
+        else:
+            self._write(src, tgt, srcline, tgtline)
+
+
+    def _write(self, src, tgt, srcline, tgtline):
         srcfile, tgtfile = self.get_fp(src, tgt)
         print(srcline, file=srcfile)
         print(tgtline, file=tgtfile)
+
+def file_line_count(fpath):
+    count = 0
+    with open(fpath) as fp:
+        for line in fp:
+            count += 1
+    return count
+
+def canonical_lang_pair_dirname(xx, yy):
+    fst, snd = sorted([xx, yy])
+    return '{}-{}'.format(fst, snd)

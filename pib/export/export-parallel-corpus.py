@@ -6,22 +6,12 @@ from tqdm import tqdm
 from collections import defaultdict
 from argparse import ArgumentParser
 from sqlalchemy import func, and_, or_
-
 from ilmulti.translator import from_pretrained
-
 from .. import db
 from ..models import Entry, Link, Translation, Retrieval
 from ..cli.utils import Preproc, ParallelWriter
-
 from ..tools.align import BLEUAligner
 
-def get_datelinks(entry, lang='en'):
-    links = []
-    date_links = entry.neighbors
-    for link in date_links:
-        if link.second.lang == lang:
-            links.append(link.second_id)
-    return list(set(links))
 
 def get_src_hyp_io(src_id, tgt_lang, model):
     src_io, hyp_io = None, None
@@ -60,13 +50,6 @@ def align(src_io, tgt_io, hyp_io,
     pwriter.write(src_lang, tgt_lang, src_entry, tgt_entry)
     print('{} {}'.format(query_id, retrieved_id), file=aligned)
 
-def calculate_threshold(scores):
-    mean = np.mean(scores)
-    var = np.var(scores)
-    std = np.std(scores)
-    threshold = 0.5
-    return threshold
-
 def aligned_entries(model, src_lang, tgt_lang):
     aligned = '{}-aligned-{}-{}.txt'.format(model, src_lang, tgt_lang)
     aligned_dict = defaultdict(int)
@@ -82,29 +65,20 @@ def aligned_entries(model, src_lang, tgt_lang):
 
 def export(src_lang, tgt_lang, model, threshold, resume_from=0):
     entries = Entry.query.filter(
-                Entry.lang==src_lang
-              ).all()
+            Entry.lang==src_lang
+        ).all()
+
     entry_list = [entry.id for entry in entries]
-    # retrieved = Retrieval.query.filter(
-    #                 and_(
-    #                     Retrieval.query_id.in_(entry_list), 
-    #                     Retrieval.model==model
-    #                 )
-    #             ).all()
-    # scores = [r.score for r in retrieved if r]     
-    # threshold = calculate_threshold(scores)
-    # aligned_dict = aligned_entries(model, src_lang, tgt_lang)
     counter = 0
 
     for entry in tqdm(entries):
         if counter < resume_from:
             counter += 1
-            continue;
+            continue
+
         counter += 1
-        # date_links = get_datelinks(entry)        
-        # is_aligned = entry.id in aligned_dict
         src_io, hyp_io, exists = get_src_hyp_io(entry.id, tgt_lang, model)
-        if exists: #and not is_aligned:            
+        if exists: 
             retrieved = Retrieval.query.filter(
                             and_(
                                 Retrieval.query_id==entry.id, 
@@ -114,11 +88,6 @@ def export(src_lang, tgt_lang, model, threshold, resume_from=0):
             if retrieved:
                 retrieved_id, score = retrieved.retrieved_id, retrieved.score
                 tgt_io = get_tgt_io(retrieved_id)
-                # if retrieved_id in date_links:
-                #     align( 
-                #         src_io, tgt_io, hyp_io, 
-                #         entry.id, retrieved_id
-                #     )
                 if score >= threshold:                    
                     align(
                         src_io, tgt_io, hyp_io, 
@@ -129,27 +98,20 @@ def export(src_lang, tgt_lang, model, threshold, resume_from=0):
 if __name__ == '__main__':
     parser=ArgumentParser()
     parser.add_argument('--output-dir', help='output directory', type=str, required=True)
-    parser.add_argument('--src_lang', help='source language, non-english', required=True)
-    parser.add_argument('--tgt_lang', help='target language', default='en' )
+    parser.add_argument('--src-lang', help='source language, non-english', required=True)
+    parser.add_argument('--tgt-lang', help='target language', default='en' )
     parser.add_argument('--model', help='translation model for generating dataset', default='mm-to-en-iter2')
     parser.add_argument('--resume-from', help='', default=0, type=int)
     parser.add_argument('--threshold', help='', default=0.5, type=float)
     args = parser.parse_args()
 
-    src_lang, tgt_lang = args.src_lang, args.tgt_lang
-    model, threshold = args.model, args.threshold
-
-    # LOG_FILENAME = '{}.log'.format(model)
-    # logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
-    # logging.debug('{}'.format(model))
-
-    engine = from_pretrained(tag=model, use_cuda=False)
+    engine = from_pretrained(tag=args.model, use_cuda=False)
     aligner = BLEUAligner(engine.translator, engine.tokenizer, engine.segmenter)
     preproc = Preproc(engine.segmenter, engine.tokenizer)
 
     fpath = os.path.join(args.output_dir, args.model)
     pwriter = ParallelWriter(fpath, fname='aligned')
 
-    aligned = open('{}-aligned-{}-{}.txt'.format(model, src_lang, tgt_lang), 'a')
-    export(src_lang, tgt_lang, model, args.resume_from)
+    aligned = open('{}-aligned-{}-{}.txt'.format(args.model, args.src_lang, args.tgt_lang), 'w')
+    export(args.src_lang, args.tgt_lang, args.model, args.threshold, args.resume_from)
 

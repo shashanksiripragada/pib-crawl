@@ -6,7 +6,6 @@ import sys
 
 def colorcell(c, v):
     r, g, b, a = c
-    v = '{:.2f}'.format(v)
     g = lambda x: '{:3f}'.format(x)
     color_string = ','.join(map(g, c[:3]))
     color = '\\cellcolor[rgb]{{{c}}}{{{v}}}'.format(c=color_string, v=v)
@@ -57,7 +56,7 @@ class Scaling:
 
 class ColorMapping:
     def __init__(self, values, max_intensity=0.35, cmap=cm.Blues_r):
-        self.values = values
+        self.values = values.astype(np.float32)
 
         self.positives = np.where(values>0, values, 0)
         self.negatives = np.where(values<0, values, 0)
@@ -92,35 +91,48 @@ class ColorMapping:
         return self.values.__repr__()
 
 
-def pretty_grid(current, mapping, diff, row_diff_sum, col_diff_sum):
+def pretty_grid(current, mapping, diff, cell_type, dreduce=False, triangular=False):
+    if dreduce:
+        row_diff_sum = np.sum(diff, axis=1).tolist()
+        col_diff_sum = np.sum(diff, axis=0).tolist()
+
+    fmt = {
+        'float': r'{:.2f}',
+        'int': r'{}'
+    }
+
     print('&'.join([''] + current.column_headers) , '\\\\')
     for i in range(0, current.nrows-1):
         vals = []
         vals.append(str(current.row_headers[i]))
         for j in range(0, current.ncols-1):
             if i != j:
-               #v = current.__getitem__(i, j)
-               v = diff[i,j]
-               cell = mapping.color(i, j, v)
-               vals.append(cell)
+                v = current.__getitem__(i, j)
+                v = fmt[cell_type].format(v)
+                cell = mapping.color(i, j, v)
+                if triangular and i > j:
+                    vals.append('')
+                else:
+                    vals.append(cell)
             else:
-               vals.append('')
+                vals.append('')
         
         print('&'.join(vals), end='')
-        print('&{:.2f}'.format(row_diff_sum[i]))
+        if dreduce:
+            print('&', fmt[cell_type].format(row_diff_sum[i]))
         print('\\\\')
-    col_diff_sum = ['{:.2f}'.format(x) for x in col_diff_sum]
-    print('&'.join(col_diff_sum))
+
+    if dreduce:
+        col_diff_sum = [fmt[cell_type].format(x) for x in col_diff_sum]
+        print('&'.join(col_diff_sum))
 
 def main(args):
     current = Grid(args.after)
     previous = Grid(args.before)
     diff = current.values - previous.values
-    diff = np.array(diff, dtype=np.float32)
-    row_diff_sum = np.sum(diff, axis=1).tolist()
-    col_diff_sum = np.sum(diff, axis=0).tolist()
-    with np.printoptions(formatter={'float': '{:.2f}'.format}):
-        print(diff, file=sys.stderr)
+    if args.cell_type == 'float':
+        diff = np.array(diff, dtype=np.float32)
+
 
     before = previous.values.sum()
     after = current.values.sum()
@@ -135,11 +147,14 @@ def main(args):
             , "Increase: {}".format(increment), 'Median: {}'.format(average_increment))
 
     mapping = ColorMapping(diff)
-    pretty_grid(current, mapping, diff, row_diff_sum, col_diff_sum)
+    pretty_grid(current, mapping, diff, args.cell_type, args.reduce, args.triangular)
 
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--before', type=str, required=True)
     parser.add_argument('--after', type=str, required=True)
+    parser.add_argument('--cell-type', choices=['float', 'int'], default='float')
+    parser.add_argument('--reduce', action='store_true')
+    parser.add_argument('--triangular', action='store_true')
     args = parser.parse_args()
     main(args)

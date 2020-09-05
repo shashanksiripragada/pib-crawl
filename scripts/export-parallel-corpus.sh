@@ -11,11 +11,11 @@ do
     python3 -m pib.export.export-parallel-corpus \
         --model mm-to-en-iter3 \
         --output-dir $OUTPUT_DIR \
-        --src_lang $lang;
+        --src-lang $lang;
     
 
     python3 -m pib.export.filter-alignments \
         --model mm-to-en-iter3 \
         --output-dir $OUTPUT_DIR \
-        --src_lang $lang;
+        --src-lang $lang;
 done
