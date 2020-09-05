@@ -121,7 +121,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.start_over:
-        delete_existing_translations(args.model, args.tgt_lang)
+        # delete_existing_translations(args.model, args.tgt_lang)
+        pass
 
     engine = from_pretrained(tag=args.model, use_cuda=args.use_cuda)
     langs = ['hi', 'ta', 'te', 'ml', 'bn', 'gu', 'mr', 'pa', 'or', 'ur'] 
