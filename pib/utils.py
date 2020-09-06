@@ -28,7 +28,7 @@ def lazy_load(key):
         return from_pretrained(tag='mm-to-en-iter3', use_cuda=True)
 
     def aligner():
-        from .tools.align import BLEUAligner
+        from ilmulti.align import BLEUAligner
         op_model = lazy_load('op_model')
         return BLEUAligner(
                     op_model.translator, op_model.tokenizer,

@@ -7,10 +7,11 @@ from collections import defaultdict
 from argparse import ArgumentParser
 from sqlalchemy import func, and_, or_
 from ilmulti.translator import from_pretrained
+from ilmulti.align import BLEUAligner
+
 from .. import db
 from ..models import Entry, Link, Translation, Retrieval
 from ..cli.utils import Preproc, ParallelWriter
-from ..tools.align import BLEUAligner
 
 
 def get_src_hyp_io(src_id, tgt_lang, model):
