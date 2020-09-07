@@ -65,7 +65,7 @@ def get_stats(langs, input_dir, fpath, fname, stats_output):
 
         df.at[src, tgt] = count
 
-    print("Total samples:", df.values[1:,:].sum())
+    print("Total samples:", df.values[:,1:].sum())
     df.to_csv(stats_output)
 
 if __name__ == '__main__':

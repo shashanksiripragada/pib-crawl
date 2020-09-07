@@ -31,6 +31,7 @@ def entry(id):
     group = defaultdict(list)
 
     x.content = split_and_wrap_in_p(x.content)
+    print(x.finalized)
 
     if x.lang != 'en':
         for model in models:

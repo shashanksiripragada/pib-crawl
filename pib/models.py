@@ -13,6 +13,7 @@ class Entry(db.Model):
     neighbors = db.relationship("Link", primaryjoin="Link.first_id==Entry.id")
     translations = db.relationship("Translation", backref="entry")
     retrieve = db.relationship("Retrieval", primaryjoin="Retrieval.query_id==Entry.id")
+    finalized = db.relationship("FrozenLink", primaryjoin="FrozenLink.anchor_id==Entry.id")
 
 class Link(db.Model):
     __tablename__ = 'link'
@@ -70,6 +71,19 @@ class Titles(db.Model):
     te_title = db.Column(db.Text)
     or_title = db.Column(db.Text)
     pa_title = db.Column(db.Text)
+
+class FrozenLink(db.Model):
+    __tablename__ = 'frozen_link'
+    __table_args__ = (
+        db.UniqueConstraint('anchor_id', 'other_id', name='unique_anchor_other'),
+    )
+
+    id = db.Column('id', db.Integer, primary_key=True)
+    anchor_id = db.Column(db.Integer, db.ForeignKey('entry.id'), nullable=False)
+    other_id = db.Column(db.Integer, db.ForeignKey('entry.id'), nullable=False)
+    anchor = db.relationship('Entry', foreign_keys=[anchor_id])
+    other = db.relationship('Entry', foreign_keys=[other_id])
+
 
 db.create_all()
 

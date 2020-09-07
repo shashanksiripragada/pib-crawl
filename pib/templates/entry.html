@@ -18,6 +18,16 @@
             {% endfor %}
         </ul>
 
+        <h6> Finalized Matches </h6>
+        <ul>
+            {% for link in entry.finalized %}
+            <li>
+                <a href="{{url_for('docstore.parallel', src=link.anchor_id, tgt=link.other_id)}}">
+                {{link.other_id}} </a> {{link.other.lang}} 
+            </li>
+            {% endfor %}
+        </ul>
+
         <h6> Retrieval based matches </h6>
         <p> All retrieved articles are in English(en). </p>
         <div class="row">
