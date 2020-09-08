@@ -9,7 +9,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import render_template, request
 from flask_migrate import Migrate
 from flask import Blueprint
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 from . import models as M
 from . import db
 from .models import Entry, Link, Titles
@@ -20,6 +20,14 @@ from .utils import lazy_load
 docstore = Blueprint('docstore', __name__, template_folder='templates')
 
 @docstore.route('/')
+def index():
+    entries = (
+        db.session.query(M.Entry)
+            .order_by(M.Entry.final_link_count.desc())
+            .all()
+    )
+    return render_template('frozen_links.html', entries=entries)
+
 @docstore.route('/entry/<id>')
 def entry(id):
     x =  M.Entry.query.get(id)

@@ -1,0 +1,15 @@
+{% extends "layout.html" %} 
+{% block body %} 
+<div class="row">	
+    <div class="col-6">
+        {% for entry in entries %}
+        <div>
+        {{ entry.id }} : 
+            {% for link in entry.finalized %}
+                <a href='/entry/{{link.other.id}}'>{{link.other.lang}}</a>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

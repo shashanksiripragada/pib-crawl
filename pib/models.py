@@ -1,4 +1,6 @@
 from . import db
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import func, select
 import datetime
 
 class Entry(db.Model):
@@ -14,6 +16,21 @@ class Entry(db.Model):
     translations = db.relationship("Translation", backref="entry")
     retrieve = db.relationship("Retrieval", primaryjoin="Retrieval.query_id==Entry.id")
     finalized = db.relationship("FrozenLink", primaryjoin="FrozenLink.anchor_id==Entry.id")
+
+    @hybrid_property
+    def final_link_count(self):
+        return self.finalized.count()
+    
+    @final_link_count.expression
+    def final_link_count(cls):
+        return (
+            select([func.count(FrozenLink.other_id)]).
+                where(FrozenLink.anchor_id == cls.id).
+                label("final_link_count")
+        )
+
+
+
 
 class Link(db.Model):
     __tablename__ = 'link'
@@ -83,6 +100,12 @@ class FrozenLink(db.Model):
     other_id = db.Column(db.Integer, db.ForeignKey('entry.id'), nullable=False)
     anchor = db.relationship('Entry', foreign_keys=[anchor_id])
     other = db.relationship('Entry', foreign_keys=[other_id])
+
+    def __repr__(self):
+        return '[{id}:{lang}] -> [{oid}:{olang}]'.format(
+                id=self.anchor.id, lang=self.anchor.lang,
+                oid=self.other.id, olang=self.other.lang
+        )
 
 
 db.create_all()
