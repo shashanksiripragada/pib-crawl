@@ -141,11 +141,11 @@ def main(args):
         key = str(idx)
         text = None
 
-        if args.force_redo: 
-            text = retrieve_pib_article(state, key)
 
-        elif args.load_from_cache:
+        if args.load_from_cache:
             text = CachedLoad(state, key)
+        if args.force_redo or text is None: 
+            text = retrieve_pib_article(state, key)
 
         update_if_exists = args.force_redo or args.load_from_cache
         if text is not None:

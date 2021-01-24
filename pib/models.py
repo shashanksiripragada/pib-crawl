@@ -30,8 +30,6 @@ class Entry(db.Model):
         )
 
 
-
-
 class Link(db.Model):
     __tablename__ = 'link'
     __table_args__ = (
@@ -106,7 +104,6 @@ class FrozenLink(db.Model):
                 id=self.anchor.id, lang=self.anchor.lang,
                 oid=self.other.id, olang=self.other.lang
         )
-
 
 db.create_all()
 

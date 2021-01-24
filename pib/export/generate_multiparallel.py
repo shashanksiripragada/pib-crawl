@@ -1,24 +1,25 @@
+import os
+import langid
+import pandas as pd
 from collections import defaultdict
 from itertools import combinations, permutations
-import os
-import pandas as pd
-import langid
 from argparse import ArgumentParser
 from ..cli.utils import ParallelWriter, file_line_count, canonical_lang_pair_dirname
 
 def collect(xx, yy, input_dir, pwriter):
     common = defaultdict(list)
-    def dirname(xx):
-        fst, snd = sorted([xx, 'en'])
-        return '{}-{}'.format(fst, snd)
 
-    dxx = dirname(xx)
-    dyy = dirname(yy)
+    dxx = canonical_lang_pair_dirname(xx, 'en')
+    dyy = canonical_lang_pair_dirname(yy, 'en')
+    
     fname = 'train'
-    with open('./{}/{}/{}.{}'.format(input_dir, dxx, fname, xx)) as src1,\
-         open('./{}/{}/{}.en'.format(input_dir, dxx, fname)) as tgt1,\
-         open('./{}/{}/{}.{}'.format(input_dir, dyy, fname, yy)) as src2,\
-         open('./{}/{}/{}.en'.format(input_dir, dyy, fname)) as tgt2:
+    dxx = os.path.join(input_dir, dxx)
+    dyy = os.path.join(input_dir, dyy)
+
+    with open('{}/{}.{}'.format(dxx, fname, xx)) as src1,\
+         open('{}/{}.en'.format(dxx, fname)) as tgt1,\
+         open('{}/{}.{}'.format(dyy, fname, yy)) as src2,\
+         open('{}/{}.en'.format(dyy, fname)) as tgt2:
         
         for s1, t1 in zip(src1, tgt1):
             s1 = s1.strip()
@@ -29,7 +30,6 @@ def collect(xx, yy, input_dir, pwriter):
             s2 = s2.strip()
             t2 = t2.strip()
             common[t2].append(s2)
-
 
         for l in common:
             if len(common[l]) == 2:
@@ -83,8 +83,6 @@ if __name__ == '__main__':
     for xx, yy in list(perm):
         if  'en' not in [xx, yy]:
             print(xx, yy)
-            # collect(xx, yy, args.input_dir, pwriter)
+            collect(xx, yy, args.input_dir, pwriter)
 
     get_stats(langs, args.input_dir, args.fpath, args.fname, args.stats_output)
-
-
